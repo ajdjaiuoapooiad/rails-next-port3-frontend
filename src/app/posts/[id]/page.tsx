@@ -10,7 +10,9 @@ import Link from 'next/link'; // Link コンポーネントを追加
 
 async function fetchPost(id: string) {
   try {
-    const res = await fetch(`http://localhost:3000/api/v1/posts/${id}`);
+    const res = await fetch(`http://localhost:3000/api/v1/posts/${id}`, {
+      cache: 'no-store', // キャッシュを無効にする
+    });
     if (!res.ok) {
       console.error(`Failed to fetch post with id ${id}: ${res.status}`);
       return null;
