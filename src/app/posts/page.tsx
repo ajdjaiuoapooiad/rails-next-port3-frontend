@@ -10,7 +10,10 @@ import {
 
 async function fetchPosts() {
   try {
-    const res = await fetch('http://localhost:3000/api/v1/posts');
+    const res = await fetch('http://localhost:3000/api/v1/posts', {
+      cache: 'no-store', // キャッシュを無効にする
+    }
+    );
     if (!res.ok) {
       console.error(`Failed to fetch posts: ${res.status}`);
       return [];
