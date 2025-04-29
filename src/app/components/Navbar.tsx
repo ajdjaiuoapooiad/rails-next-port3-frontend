@@ -28,7 +28,7 @@ const Navbar: React.FC = () => {
               />
             </svg>
           </button>
-          <Link href="/" className="text-white text-lg font-bold">
+          <Link href="/posts" className="text-white text-lg font-bold">
             My Website
           </Link>
         </div>
