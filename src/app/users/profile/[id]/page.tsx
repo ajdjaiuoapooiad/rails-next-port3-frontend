@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
+import PostList from '@/app/components/posts/PostList';
 
 interface UserProfile {
   id: number;
@@ -75,7 +76,7 @@ const ProfilePage: React.FC = () => {
           {/* その他のユーザーコンテンツ */}
           <div className="mt-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">最近の投稿</h3>
-            <p className="text-gray-500 text-sm">まだ投稿はありません。</p>
+            <PostList /> {/* 投稿リストコンポーネントを追加 */}
           </div>
         </div>
       </div>
