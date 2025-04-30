@@ -22,7 +22,7 @@ const PostIndexPage = () => {
 
   return (
     <div className="bg-gray-100 py-6 sm:py-8 lg:py-12">
-      <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-xl font-bold text-gray-800 sm:text-2xl lg:text-3xl text-center mb-6">
           投稿一覧
         </h1>

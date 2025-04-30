@@ -34,7 +34,7 @@ export default async function DetailPage({ params }) {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white shadow-md rounded-md p-6 mt-8">
+    <div className="max-w-2xl mx-auto bg-white shadow-md rounded-md p-6 mt-8">
       <div className="flex items-start space-x-3 mb-4">
         <div className="flex items-center flex-shrink-0">
           <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
