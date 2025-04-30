@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import PostList from '@/app/components/posts/PostList';
+import Link from 'next/link';
 
 interface UserProfile {
   id: number;
@@ -126,7 +127,7 @@ const ProfilePage: React.FC = () => {
               メッセージ
             </button>
             <button className="flex-1 bg-green-500 hover:bg-green-700 text-white font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm">
-              編集
+              <Link href={`/users/profile/${userProfile.id}/edit`}>編集</Link> 
             </button>
           </div>
 
