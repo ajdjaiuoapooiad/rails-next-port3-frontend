@@ -32,7 +32,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
 
   async function createPost(content: string, userId: string, postType: string, token: string) {
     try {
-      const res = await fetch('http://localhost:3000/api/v1/posts', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

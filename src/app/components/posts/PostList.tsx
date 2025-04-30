@@ -30,7 +30,7 @@ const PostList: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('http://localhost:3000/api/v1/posts', {
+        const res = await fetch('${process.env.NEXT_PUBLIC_API_URL}/posts', {
           cache: 'no-store', // キャッシュを無効にする（必要に応じて変更）
         });
         if (!res.ok) {
