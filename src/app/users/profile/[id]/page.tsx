@@ -127,7 +127,7 @@ const ProfilePage: React.FC = () => {
               メッセージ
             </button>
             <button className="flex-1 bg-green-500 hover:bg-green-700 text-white font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm">
-              <Link href={`/users/profile/${userProfile.id}/edit`}>編集</Link> 
+              <Link href={`/users/${userProfile.id}/profile/edit`}>編集</Link> 
             </button>
           </div>
 
