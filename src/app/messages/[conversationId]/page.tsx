@@ -116,23 +116,23 @@ export default function MessageDetailPage() {
           <div
             key={msg.id}
             className={`rounded-md shadow-sm p-3 w-fit max-w-[80%] ${
-              msg.user.id === (localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : 0)
+              msg.user?.id === (localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : 0)
                 ? 'bg-blue-100 text-blue-800 ml-auto'
                 : 'bg-gray-300 text-gray-800 mr-auto'
             }`}
           >
             <div className="flex items-start space-x-2">
               <div className="w-6 h-6 rounded-full overflow-hidden relative">
-                {msg.user.profile?.user_icon_url ? (
+                {msg.user?.profile?.user_icon_url ? (
                   <img src={msg.user.profile.user_icon_url} alt={msg.user.username} className="object-cover w-full h-full" />
                 ) : (
                   <div className="w-full h-full bg-gray-400 flex items-center justify-center text-white text-xs">
-                    {msg.user.username.charAt(0).toUpperCase()}
+                    {msg.user?.username.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
               <div>
-                <div className="text-sm font-semibold">{msg.user.username}</div>
+                <div className="text-sm font-semibold">{msg.user?.username}</div>
                 <p className="text-gray-700 break-words">{msg.content}</p>
                 <div className="text-xs text-gray-500 mt-1">
                   {formatDistanceToNowStrict(new Date(msg.created_at), { locale: ja, addSuffix: true })}
