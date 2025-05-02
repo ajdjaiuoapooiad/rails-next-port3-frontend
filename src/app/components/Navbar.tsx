@@ -109,16 +109,16 @@ const Navbar: React.FC<NavbarProps> = () => {
           
 
           {currentUserProfile ? (
-            <div className="relative">
-
-              <Link href="/auth/login" className="text-gray-300 hover:text-white">
+            <>
+            <Link href="/auth/login" className="text-gray-300 hover:text-white">
                 通知
               </Link>
 
               <Link href="/auth/login" className="text-gray-300 hover:text-white">
                 メッセージ
               </Link>
-              
+            <div className="relative">
+
               <button onClick={toggleDropdown} className="flex items-center focus:outline-none">
                 <div className="flex items-center">
                   {currentUserProfile.user_icon_url ? (
@@ -138,6 +138,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                   <span className="text-white ml-2 text-sm hidden sm:inline">{displayedUsername}</span>
                   <ChevronDownIcon className={`h-5 w-5 text-gray-300 ml-1 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </div>
+
               </button>
 
               {isDropdownOpen && (
@@ -154,6 +155,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                 </div>
               )}
             </div>
+            </>
           ) : (
             <div className="space-x-4">
               <Link href="/auth/login" className="text-gray-300 hover:text-white">
