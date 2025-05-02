@@ -108,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </Link>
 
         {/* 主要なナビゲーションリンク */}
-        <Link href="/home" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/posts" className="block py-2 text-gray-300 hover:text-white">
           ホーム
         </Link>
         <Link href="/notifications" className="block py-2 text-gray-300 hover:text-white">
