@@ -8,6 +8,7 @@ import {
   EllipsisHorizontalIcon,
   UserCircleIcon,
   HeartIcon as HeartSolidIcon,
+  TrashIcon, // 削除アイコンを追加
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import LikeButton from '@/app/components/posts/LikeButton';
@@ -28,7 +29,10 @@ interface Comment {
   id: number;
   content: string;
   created_at: string;
+  user_id: number; // 追加: ユーザー ID
+  post_id: number; // 追加: 投稿 ID
   user?: {
+    id?: number; // コメント投稿者の ID
     username?: string;
     user_icon_url?: string;
   };
@@ -96,6 +100,26 @@ async function postComment(postId: string, content: string): Promise<Comment | n
   }
 }
 
+async function deleteComment(commentId: number): Promise<boolean> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
+      },
+    });
+    if (res.ok) {
+      return true;
+    } else {
+      console.error(`Failed to delete comment with id ${commentId}: ${res.status}`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`Error deleting comment with id ${commentId}:`, error);
+    return false;
+  }
+}
+
 export default function DetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
   const [post, setPost] = useState<Post | null>(null);
@@ -105,6 +129,7 @@ export default function DetailPage({ params }: { params: { id: string } }) {
   const [loadingComments, setLoadingComments] = useState(true);
   const [errorComments, setErrorComments] = useState<string | null>(null);
   const [commentInput, setCommentInput] = useState('');
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null); // 現在のユーザーの ID を保持
 
   const fetchDetailedPost = useCallback(async (postId: string) => {
     setLoading(true);
@@ -126,10 +151,31 @@ export default function DetailPage({ params }: { params: { id: string } }) {
     setLoadingComments(false);
   }, []);
 
+  const fetchCurrentUser = useCallback(async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profiles/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
+        },
+      });
+      if (res.ok) {
+        const userData = await res.json();
+        setCurrentUserId(userData.id);
+      } else {
+        console.error('Failed to fetch current user');
+        setCurrentUserId(null);
+      }
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+      setCurrentUserId(null);
+    }
+  }, []);
+
   useEffect(() => {
     fetchDetailedPost(id);
     fetchPostComments(id);
-  }, [fetchDetailedPost, fetchPostComments, id]);
+    fetchCurrentUser();
+  }, [fetchDetailedPost, fetchPostComments, fetchCurrentUser, id]);
 
   const handleLikeChange = (postId: number, liked: boolean) => {
     if (post && post.id === postId) {
@@ -158,6 +204,16 @@ export default function DetailPage({ params }: { params: { id: string } }) {
     }
   };
 
+  const handleDeleteComment = async (commentId: number) => {
+    const success = await deleteComment(commentId);
+    if (success) {
+      setComments((prevComments) => prevComments.filter((comment) => comment.id !== commentId));
+    } else {
+      console.error(`コメント ID ${commentId} の削除に失敗しました。`);
+      // 必要に応じてエラーメッセージを表示
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-4">読み込み中...</div>;
   }
@@ -172,6 +228,7 @@ export default function DetailPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="max-w-2xl mx-auto bg-white shadow-md rounded-md p-6 mt-8">
+      {/* 投稿の詳細表示 (省略) */}
       <div className="flex items-start space-x-3 mb-4">
         <div className="flex items-center flex-shrink-0">
           <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
@@ -192,7 +249,6 @@ export default function DetailPage({ params }: { params: { id: string } }) {
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046-.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
           </svg>
-          {/* 4 */}
         </button>
         <div className="flex items-center space-x-1">
           <LikeButton
@@ -227,10 +283,23 @@ export default function DetailPage({ params }: { params: { id: string } }) {
               <li key={comment.id} className="bg-gray-100 rounded-md p-3 mb-2">
                 <div className="flex items-start space-x-2">
                   <UserCircleIcon className="h-6 w-6 rounded-full text-gray-400 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">{comment.user?.username || '不明'}</p>
-                    <p className="text-gray-700 text-sm">{comment.content}</p>
-                    <p className="text-gray-500 text-xs">{new Date(comment.created_at).toLocaleDateString()}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">{comment.user?.username || '不明'}</p>
+                        <p className="text-gray-700 text-sm">{comment.content}</p>
+                        <p className="text-gray-500 text-xs">{new Date(comment.created_at).toLocaleDateString()}</p>
+                      </div>
+                  
+                        <button
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="text-red-500 hover:text-red-700 focus:outline-none"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                          削除
+                        </button>
+               
+                    </div>
                   </div>
                 </div>
               </li>
