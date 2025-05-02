@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { UserCircleIcon } from '@heroicons/react/24/solid'; // デフォルトアイコン
+import { useRouter } from 'next/navigation';
+import { UserCircleIcon } from '@heroicons/react/24/solid';
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -19,6 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
   const current_userId = localStorage.getItem('userId');
+  const router = useRouter();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -64,6 +68,58 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     fetchCurrentUserProfile();
   }, []);
 
+  const handleLogout = () => {
+    Swal.fire({
+      title: 'ログアウトしますか？',
+      text: 'ログアウトすると、再度ログインが必要になります。',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'ログアウト',
+      cancelButtonText: 'キャンセル',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // クライアントサイドの認証情報を削除
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userId');
+
+          // (オプション) バックエンドにログアウトのリクエストを送信する場合はここに追加
+          // const response = await fetch('/api/auth/logout', { method: 'POST' });
+          // if (response.ok) {
+          //   // バックエンドでのログアウト成功時の処理
+          // } else {
+          //   const errorData = await response.json();
+          //   Swal.fire({
+          //     icon: 'error',
+          //     title: 'ログアウトに失敗しました',
+          //     text: errorData.message || 'ログアウト処理中にエラーが発生しました。',
+          //   });
+          //   return; // 失敗した場合はリダイレクトしない
+          // }
+
+          Swal.fire({
+            icon: 'success',
+            title: 'ログアウト成功', // ログインページとメッセージを合わせる
+            showConfirmButton: false,
+            timer: 1500,
+          });
+
+          // ログインページへリダイレクト
+          router.push('/auth/login');
+          onClose();
+        } catch (error: any) {
+          Swal.fire({
+            icon: 'error',
+            title: 'ログアウト中にエラーが発生しました',
+            text: error.message || 'ログアウト処理中に予期せぬエラーが発生しました。',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div
       ref={sidebarRef}
@@ -84,7 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       </div>
       <nav className="p-4">
         {/* プロフィール情報 (動的表示) */}
-        <Link href="/profile" className="flex items-center mb-4">
+        <Link href="/profile" onClick={onClose} className="flex items-center mb-4">
           <div className="h-8 w-8 rounded-full bg-gray-400 mr-2 flex items-center justify-center overflow-hidden">
             {currentUserProfile?.user_icon_url ? (
               <img
@@ -108,40 +164,41 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </Link>
 
         {/* 主要なナビゲーションリンク */}
-        <Link href="/posts" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/posts" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
           ホーム
         </Link>
-        <Link href="/notifications" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/notifications" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
           通知
         </Link>
-        <Link href="/messages" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/messages" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
           メッセージ
         </Link>
-        <Link href="/bookmarks" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/bookmarks" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
           ブックマーク
         </Link>
-        <Link href="/lists" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/lists" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
           リスト
         </Link>
-        <Link href="/communities" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/communities" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
           コミュニティ
         </Link>
-        <Link href="/explore" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/explore" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
           探索
         </Link>
 
         <hr className="border-t border-gray-700 my-4" /> {/* 区切り線 */}
 
         {/* 設定・アカウント */}
-        <Link href={`/users/${current_userId}/profile`} className="block py-2 text-gray-300 hover:text-white">
+        <Link href={`/users/${current_userId}/profile`} onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
           プロフィール
         </Link>
-        <Link href="/settings/account" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/settings/account" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
           設定とプライバシー
         </Link>
-        <Link href="/logout" className="block py-2 text-red-500 hover:text-red-700">
+        {/* ログアウトボタンに変更 */}
+        <button onClick={handleLogout} className="block py-2 text-red-500 hover:text-red-700 w-full text-left">
           ログアウト
-        </Link>
+        </button>
       </nav>
     </div>
   );

@@ -146,10 +146,10 @@ const Navbar: React.FC<NavbarProps> = () => {
           ) : (
             <div className="space-x-4">
               <Link href="/auth/login" className="text-gray-300 hover:text-white">
-                Login
+                ログイン
               </Link>
               <Link href="/auth/register" className="text-gray-300 hover:text-white">
-                Register
+                新規登録
               </Link>
             </div>
           )}
