@@ -1,15 +1,23 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { UserCircleIcon } from '@heroicons/react/24/solid'; // デフォルトアイコン
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface UserProfile {
+  username: string;
+  user_icon_url?: string;
+  // 他のプロフィール情報 (必要に応じて追加)
+}
+
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -29,6 +37,32 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     };
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    const fetchCurrentUserProfile = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const userId = localStorage.getItem('userId');
+        const res = await fetch(`${apiUrl}/profiles/${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
+          },
+        });
+        if (res.ok) {
+          const userProfileData: UserProfile = await res.json();
+          setCurrentUserProfile(userProfileData);
+        } else {
+          console.error('Failed to fetch current user profile in Sidebar');
+          setCurrentUserProfile(null);
+        }
+      } catch (error) {
+        console.error('Error fetching current user profile in Sidebar:', error);
+        setCurrentUserProfile(null);
+      }
+    };
+
+    fetchCurrentUserProfile();
+  }, []);
+
   return (
     <div
       ref={sidebarRef}
@@ -37,7 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       }`}
     >
       <div className="p-4 flex justify-end">
-        <button onClick={onClose} className="text-gray-400 hover:text-white focus:outline-none">
+        <button onClick={onClose} className="text-gray-400 hover:text-white focus:outline-none" aria-label="メニューを閉じる">
           <svg className="h-6 w-6 fill-current" viewBox="0 0 24 24">
             <path
               fillRule="evenodd"
@@ -48,49 +82,64 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </button>
       </div>
       <nav className="p-4">
-        {/* プロフィール情報 */}
+        {/* プロフィール情報 (動的表示) */}
         <Link href="/profile" className="flex items-center mb-4">
-        <div className="h-8 w-8 rounded-full bg-gray-400 mr-2" /> {/* アバター */}
-        <div>
-        <p className="text-sm font-semibold text-white">ユーザー名</p>
-        <p className="text-xs text-gray-400">@ハンドル名</p>
-        </div>
+          <div className="h-8 w-8 rounded-full bg-gray-400 mr-2 flex items-center justify-center overflow-hidden">
+            {currentUserProfile?.user_icon_url ? (
+              <img
+                src={currentUserProfile.user_icon_url}
+                alt={`${currentUserProfile.username}のアイコン`}
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  console.error('Failed to load user icon in Sidebar:', currentUserProfile.user_icon_url);
+                  (e.target as HTMLImageElement).onerror = null;
+                  (e.target as HTMLImageElement).src = '';
+                }}
+              />
+            ) : (
+              <UserCircleIcon className="h-8 w-8 text-gray-300" />
+            )}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-white">{currentUserProfile?.username || 'ゲスト'}</p>
+            <p className="text-xs text-gray-400">@{currentUserProfile?.username || 'guest'}</p>
+          </div>
         </Link>
 
         {/* 主要なナビゲーションリンク */}
         <Link href="/home" className="block py-2 text-gray-300 hover:text-white">
-        ホーム
+          ホーム
         </Link>
         <Link href="/notifications" className="block py-2 text-gray-300 hover:text-white">
-        通知
+          通知
         </Link>
         <Link href="/messages" className="block py-2 text-gray-300 hover:text-white">
-        メッセージ
+          メッセージ
         </Link>
         <Link href="/bookmarks" className="block py-2 text-gray-300 hover:text-white">
-        ブックマーク
+          ブックマーク
         </Link>
         <Link href="/lists" className="block py-2 text-gray-300 hover:text-white">
-        リスト
+          リスト
         </Link>
         <Link href="/communities" className="block py-2 text-gray-300 hover:text-white">
-        コミュニティ
+          コミュニティ
         </Link>
         <Link href="/explore" className="block py-2 text-gray-300 hover:text-white">
-        探索
+          探索
         </Link>
 
         <hr className="border-t border-gray-700 my-4" /> {/* 区切り線 */}
 
         {/* 設定・アカウント */}
         <Link href="/users/1/profile" className="block py-2 text-gray-300 hover:text-white">
-        プロフィール
+          プロフィール
         </Link>
         <Link href="/settings/account" className="block py-2 text-gray-300 hover:text-white">
-        設定とプライバシー
+          設定とプライバシー
         </Link>
         <Link href="/logout" className="block py-2 text-red-500 hover:text-red-700">
-        ログアウト
+          ログアウト
         </Link>
       </nav>
     </div>
