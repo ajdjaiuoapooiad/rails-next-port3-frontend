@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
-import { UserCircleIcon } from '@heroicons/react/24/solid'; // デフォルトのUserアイコン
+import { UserCircleIcon } from '@heroicons/react/24/solid';
+import { ChevronDownIcon } from '@heroicons/react/20/solid'; // ドロップダウンのアイコン
 
 interface UserProfile {
   id: number;
@@ -14,14 +15,16 @@ interface UserProfile {
   website?: string;
   user_icon_url?: string;
   bg_image_url?: string;
-  is_following?: boolean; // 現在のユーザーがこのプロフィールをフォローしているか
+  is_following?: boolean;
 }
 
 interface NavbarProps {}
 
 const Navbar: React.FC<NavbarProps> = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null); // ログインユーザーのプロフィール情報
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -29,6 +32,14 @@ const Navbar: React.FC<NavbarProps> = () => {
 
   const closeSidebar = () => {
     setIsSidebarOpen(false);
+  };
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen); // 現在の状態を反転させる
+  };
+
+  const closeDropdown = () => {
+    setIsDropdownOpen(false);
   };
 
   useEffect(() => {
@@ -57,6 +68,24 @@ const Navbar: React.FC<NavbarProps> = () => {
     fetchCurrentUserProfile();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        closeDropdown();
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   const displayedUsername: string = currentUserProfile?.username ? (currentUserProfile.username.length > 10 ? currentUserProfile.username.slice(0, 10) + '...' : currentUserProfile.username) : '';
 
   return (
@@ -76,24 +105,43 @@ const Navbar: React.FC<NavbarProps> = () => {
             My Website
           </Link>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="relative flex items-center space-x-4">
           {currentUserProfile ? (
-            <div className="flex items-center">
-              {currentUserProfile.user_icon_url ? (
-                <img
-                  src={currentUserProfile.user_icon_url}
-                  alt={`${currentUserProfile.username}のアイコン`}
-                  className="h-8 w-8 rounded-full object-cover"
-                  onError={(e) => {
-                    console.error('Failed to load user icon:', currentUserProfile.user_icon_url);
-                    (e.target as HTMLImageElement).onerror = null; // 無限ループを防ぐ
-                    (e.target as HTMLImageElement).src = ''; // エラーになったらsrcをクリア
-                  }}
-                />
-              ) : (
-                <UserCircleIcon className="h-8 w-8 text-gray-300" />
+            <div className="relative">
+              <button onClick={toggleDropdown} className="flex items-center focus:outline-none">
+                <div className="flex items-center">
+                  {currentUserProfile.user_icon_url ? (
+                    <img
+                      src={currentUserProfile.user_icon_url}
+                      alt={`${currentUserProfile.username}のアイコン`}
+                      className="h-8 w-8 rounded-full object-cover"
+                      onError={(e) => {
+                        console.error('Failed to load user icon:', currentUserProfile.user_icon_url);
+                        (e.target as HTMLImageElement).onerror = null;
+                        (e.target as HTMLImageElement).src = '';
+                      }}
+                    />
+                  ) : (
+                    <UserCircleIcon className="h-8 w-8 text-gray-300" />
+                  )}
+                  <span className="text-white ml-2 text-sm hidden sm:inline">{displayedUsername}</span>
+                  <ChevronDownIcon className={`h-5 w-5 text-gray-300 ml-1 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
+
+              {isDropdownOpen && (
+                <div ref={dropdownRef} className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                  <Link href="/profile" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                    プロフィール
+                  </Link>
+                  <Link href="/settings" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                    設定
+                  </Link>
+                  <Link href="/logout" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                    ログアウト
+                  </Link>
+                </div>
               )}
-              <span className="text-white ml-2 text-sm">{displayedUsername}</span>
             </div>
           ) : (
             <div className="space-x-4">
