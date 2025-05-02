@@ -106,8 +106,19 @@ const Navbar: React.FC<NavbarProps> = () => {
           </Link>
         </div>
         <div className="relative flex items-center space-x-4">
+          
+
           {currentUserProfile ? (
             <div className="relative">
+
+              <Link href="/auth/login" className="text-gray-300 hover:text-white">
+                通知
+              </Link>
+
+              <Link href="/auth/login" className="text-gray-300 hover:text-white">
+                メッセージ
+              </Link>
+              
               <button onClick={toggleDropdown} className="flex items-center focus:outline-none">
                 <div className="flex items-center">
                   {currentUserProfile.user_icon_url ? (
