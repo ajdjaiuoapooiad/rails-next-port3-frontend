@@ -3,18 +3,25 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
-import { UserCircleIcon } from '@heroicons/react/24/solid'; // Userアイコンをインポート
+import { UserCircleIcon } from '@heroicons/react/24/solid'; // デフォルトのUserアイコン
 
-interface User {
+interface UserProfile {
+  id: number;
   username: string;
-  // 他のユーザー情報 (必要に応じて追加)
+  email: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  user_icon_url?: string;
+  bg_image_url?: string;
+  is_following?: boolean; // 現在のユーザーがこのプロフィールをフォローしているか
 }
 
 interface NavbarProps {}
 
 const Navbar: React.FC<NavbarProps> = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null); // ログインユーザーの状態
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null); // ログインユーザーのプロフィール情報
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -25,35 +32,32 @@ const Navbar: React.FC<NavbarProps> = () => {
   };
 
   useEffect(() => {
-    // ここでログインしているユーザーの情報を取得する処理を記述します
-    // 例：APIからユーザー情報を取得
-    const fetchCurrentUser = async () => {
+    const fetchCurrentUserProfile = async () => {
       try {
-        // 仮のAPIエンドポイント
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const userId = localStorage.getItem('userId'); // ログインユーザーのIDを取得 (例: localStorageから取得)
+        const userId = localStorage.getItem('userId');
         const res = await fetch(`${apiUrl}/profiles/${userId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
           },
         });
         if (res.ok) {
-          const userData: User = await res.json();
-          setCurrentUser(userData);
+          const userProfileData: UserProfile = await res.json();
+          setCurrentUserProfile(userProfileData);
         } else {
-          console.error('Failed to fetch current user');
-          setCurrentUser(null);
+          console.error('Failed to fetch current user profile');
+          setCurrentUserProfile(null);
         }
       } catch (error) {
-        console.error('Error fetching current user:', error);
-        setCurrentUser(null);
+        console.error('Error fetching current user profile:', error);
+        setCurrentUserProfile(null);
       }
     };
 
-    fetchCurrentUser();
+    fetchCurrentUserProfile();
   }, []);
 
-  const displayedUsername: string = currentUser?.username ? (currentUser.username.length > 10 ? currentUser.username.slice(0, 10) + '...' : currentUser.username) : '';
+  const displayedUsername: string = currentUserProfile?.username ? (currentUserProfile.username.length > 10 ? currentUserProfile.username.slice(0, 10) + '...' : currentUserProfile.username) : '';
 
   return (
     <nav className="bg-gray-800 p-4">
@@ -73,9 +77,22 @@ const Navbar: React.FC<NavbarProps> = () => {
           </Link>
         </div>
         <div className="flex items-center space-x-4">
-          {currentUser ? (
+          {currentUserProfile ? (
             <div className="flex items-center">
-              <UserCircleIcon className="h-8 w-8 text-gray-300" />
+              {currentUserProfile.user_icon_url ? (
+                <img
+                  src={currentUserProfile.user_icon_url}
+                  alt={`${currentUserProfile.username}のアイコン`}
+                  className="h-8 w-8 rounded-full object-cover"
+                  onError={(e) => {
+                    console.error('Failed to load user icon:', currentUserProfile.user_icon_url);
+                    (e.target as HTMLImageElement).onerror = null; // 無限ループを防ぐ
+                    (e.target as HTMLImageElement).src = ''; // エラーになったらsrcをクリア
+                  }}
+                />
+              ) : (
+                <UserCircleIcon className="h-8 w-8 text-gray-300" />
+              )}
               <span className="text-white ml-2 text-sm">{displayedUsername}</span>
             </div>
           ) : (
