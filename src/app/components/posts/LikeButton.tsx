@@ -60,12 +60,14 @@ const LikeButton: React.FC<LikeButtonProps> = ({ postId, isLiked: initialIsLiked
       if (!token) {
         throw new Error('認証トークンが見つかりません。');
       }
-      // DELETEリクエストのbodyでパラメータを送ることは一般的ではないため、query parameterを使用
-      const response = await fetch(`${apiUrl}/likes?like[post_id]=${postId}`, {
+
+      const response = await fetch(`${apiUrl}/likes/${postId}`, { // パスから postId を削除
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json', // JSON形式でボディを送信する場合
         },
+        body: JSON.stringify({ like: { post_id: postId } }), // リクエストボディにパラメータを含める
       });
 
       if (!response.ok) {

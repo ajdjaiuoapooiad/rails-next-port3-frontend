@@ -89,7 +89,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <Link href="/settings/account" className="block py-2 text-gray-300 hover:text-white">
         設定とプライバシー
         </Link>
-        <Link href="/logout" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/logout" className="block py-2 text-red-500 hover:text-red-700">
         ログアウト
         </Link>
       </nav>
