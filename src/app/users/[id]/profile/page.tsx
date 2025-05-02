@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import PostList from '@/app/components/posts/PostList';
 import Link from 'next/link';
@@ -12,57 +13,131 @@ interface UserProfile {
   bio?: string;
   location?: string;
   website?: string;
-  user_icon_url?: string; // プロフィールアイコンのURL
-  bg_image_url?: string;   // 背景画像のURL
+  user_icon_url?: string;
+  bg_image_url?: string;
+  is_following?: boolean; // 現在のユーザーがこのプロフィールをフォローしているか
 }
 
-const ProfilePage: React.FC = () => {
+const UserProfilePage: React.FC = () => {
+  const params = useParams();
+  const { id: paramId } = params;
+  const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'liked' | 'following'>('posts');
+  const [followLoading, setFollowLoading] = useState(false);
+  const [followError, setFollowError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // 環境変数からAPI URLを取得
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        if (!apiUrl) {
-          throw new Error('API URLが設定されていません');
-        }
+    if (paramId) {
+      setUserId(Array.isArray(paramId) ? paramId[0] : paramId);
+    } else {
+      setUserId(null);
+    }
+  }, [paramId]);
 
-        // ローカルストレージなどからトークンを取得する処理
-        const token = localStorage.getItem('authToken'); // 例：localStorageから取得
-        if (!token) {
-          throw new Error('認証トークンが見つかりません');
-        }
+  const fetchUserProfile = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
-        // APIエンドポイントに合わせて修正してください
-        const response = await fetch(`${apiUrl}/profile`, {
-          headers: {
-            'Authorization': `Bearer ${token}`, // Authorizationヘッダーにトークンを設定
-            'Content-Type': 'application/json', // 必要に応じてContent-Typeを設定
-          },
-        });
+    setLoading(true);
+    setError(null);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'プロフィールの取得に失敗しました');
-        }
-        const data: UserProfile = await response.json();
-        setUserProfile(data);
-      } catch (err: any) {
-        setError(err.message);
-        console.error('プロフィールの取得エラー:', err);
-      } finally {
-        setLoading(false);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) {
+        throw new Error('API URLが設定されていません。');
       }
-    };
+      const token = localStorage.getItem('authToken');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const response = await fetch(`${apiUrl}/profiles/${userId}`, { headers });
 
-    fetchProfile();
-  }, []); // 空の依存配列で、コンポーネントのマウント時に一度だけ実行
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData?.message || `ユーザーID ${userId} のプロフィール情報の取得に失敗しました。`);
+      }
+
+      const data: UserProfile = await response.json();
+      setUserProfile(data);
+    } catch (err: any) {
+      setError(err.message);
+      console.error('プロフィール情報取得エラー:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]);
+
+  const handleFollow = async () => {
+    if (!userProfile) return;
+    setFollowLoading(true);
+    setFollowError(null);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('認証トークンが見つかりません。');
+      }
+      const response = await fetch(`${apiUrl}/follows`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ following_id: userProfile.id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData?.error || 'フォローに失敗しました。');
+      }
+      // フォロー成功したら、UserProfile を再取得して is_following を更新
+      fetchUserProfile();
+    } catch (err: any) {
+      setFollowError(err.message);
+      console.error('フォローエラー:', err);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (!userProfile) return;
+    setFollowLoading(true);
+    setFollowError(null);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('認証トークンが見つかりません。');
+      }
+      const response = await fetch(`${apiUrl}/follows?following_id=${userProfile.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData?.error || 'フォロー解除に失敗しました。');
+      }
+      // アンフォロー成功したら、UserProfile を再取得して is_following を更新
+      fetchUserProfile();
+    } catch (err: any) {
+      setFollowError(err.message);
+      console.error('アンフォローエラー:', err);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
 
   if (loading) {
     return <div>プロフィールを読み込み中...</div>;
@@ -73,26 +148,34 @@ const ProfilePage: React.FC = () => {
   }
 
   if (!userProfile) {
-    return <div>プロフィール情報が見つかりません。</div>;
+    return <div>ユーザーが見つかりません。</div>;
   }
 
   return (
     <div className="bg-gray-100 py-8">
       <div className="max-w-2xl mx-auto bg-white shadow-md rounded-md overflow-hidden">
-        {/* プロフィールヘッダー (背景画像) */}
+        {/* 背景画像 */}
         <div className="relative h-48 overflow-hidden">
-          {userProfile.bg_image_url && (
+          {userProfile.bg_image_url ? (
             <img
               src={userProfile.bg_image_url}
               alt="プロフィール背景"
               className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <img
+              src={process.env.NEXT_PUBLIC_DEFAULT_BG_IMAGE_URL}
+              alt="デフォルトのプロフィール背景"
+              className="absolute inset-0 w-full h-full object-cover"
+              layout="fill" // 親要素に合わせてサイズを調整
+              objectFit="cover"
             />
           )}
           <div className="absolute inset-0 bg-black opacity-20"></div>
         </div>
 
         <div className="px-4 py-4 relative">
-          {/* アバター (左寄せ、背景画像に重ねる) */}
+          {/* アバター */}
           <div className="-mt-16 absolute left-4">
             {userProfile.user_icon_url ? (
               <img
@@ -101,11 +184,17 @@ const ProfilePage: React.FC = () => {
                 className="h-24 w-24 rounded-full border-4 border-white bg-gray-300 shadow-md object-cover"
               />
             ) : (
-              <UserCircleIcon className="h-24 w-24 rounded-full border-4 border-white bg-gray-300 text-gray-500 shadow-md" />
+              <img
+                src={process.env.NEXT_PUBLIC_DEFAULT_USER_ICON_URL}
+                alt="デフォルトのプロフィールアイコン"
+                className="h-24 w-24 rounded-full border-4 border-white bg-gray-300 shadow-md object-cover"
+                width={96} // h-24 w-24 に対応するピクセル数
+                height={96}
+              />
             )}
-          </div>
+          </div>  
 
-          {/* ユーザー情報 (アバターの右側に配置) */}
+          {/* ユーザー情報 */}
           <div className="mt-6 ml-32 text-left">
             <h2 className="text-xl font-semibold text-gray-800">{userProfile.username}</h2>
             <p className="text-gray-600 text-sm">{userProfile.email}</p>
@@ -116,20 +205,46 @@ const ProfilePage: React.FC = () => {
                 ウェブサイト: <a href={userProfile.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{userProfile.website}</a>
               </p>
             )}
+            {/* 他のプロフィール情報を表示 */}
           </div>
 
+          
           {/* アクションボタン */}
           <div className="mt-4 flex justify-around space-x-2">
-            <button className="flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm">
-              フォロー
-            </button>
+            {userProfile.id !== parseInt(userId || '', 10) && ( // 自分のプロフィールにはフォローボタンを表示しない
+              <>
+                {userProfile.is_following ? (
+                  <button
+                    onClick={handleUnfollow}
+                    disabled={followLoading}
+                    className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm"
+                  >
+                    {followLoading ? 'フォロー解除中...' : 'フォロー中'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleFollow}
+                    disabled={followLoading}
+                    className="flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm"
+                  >
+                    {followLoading ? 'フォロー中...' : 'フォロー'}
+                  </button>
+                )}
+              </>
+            )}
             <button className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm">
               メッセージ
             </button>
-            <button className="flex-1 bg-green-500 hover:bg-green-700 text-white font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm">
-              <Link href={`/users/${userProfile.id}/profile/edit`}>編集</Link> 
-            </button>
+            {/* 自分のプロフィールの場合のみ編集ボタンを表示 */}
+            {userProfile.id === parseInt(userId || '', 10) && (
+              <button className="flex-1 bg-green-500 hover:bg-green-700 text-white font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm">
+                <Link href={`/users/${userProfile.id}/profile/edit`}>編集</Link>
+              </button>
+            )}
           </div>
+
+          {followError && <p className="mt-2 text-red-500 text-sm">{followError}</p>}
+
 
           {/* ナビゲーションバー */}
           <div className="mt-6 border-b border-gray-200 w-full flex justify-center">
@@ -202,10 +317,12 @@ const ProfilePage: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* 必要に応じてフォローボタンなどを追加 */}
         </div>
       </div>
     </div>
   );
 };
 
-export default ProfilePage;
+export default UserProfilePage;
