@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         <hr className="border-t border-gray-700 my-4" /> {/* 区切り線 */}
 
         {/* 設定・アカウント */}
-        <Link href="/users/profile/1" className="block py-2 text-gray-300 hover:text-white">
+        <Link href="/users/1/profile" className="block py-2 text-gray-300 hover:text-white">
         プロフィール
         </Link>
         <Link href="/settings/account" className="block py-2 text-gray-300 hover:text-white">
