@@ -4,20 +4,25 @@ import React, { useState, useEffect } from 'react';
 
 interface Notification {
   id: number;
-  type: string;
-  sender: {
+  recipient_id: number;
+  sender_id: number | null;
+  notifiable_type: string;
+  notifiable_id: number;
+  notification_type: string;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+  sender?: {
     id: number;
     username: string;
     // 他のユーザー情報
   };
-  notifiable: {
+  notifiable?: {
     id: number;
-    // 関連するエンティティの情報 (投稿のタイトル、コメントの内容など)
     content?: string;
     title?: string;
+    // 他の関連エンティティの情報
   };
-  created_at: string;
-  read_at: string | null;
 }
 
 const NotificationsPage: React.FC = () => {
@@ -35,7 +40,7 @@ const NotificationsPage: React.FC = () => {
           return;
         }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, { // バックエンドの通知 API エンドポイント
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -79,21 +84,22 @@ const NotificationsPage: React.FC = () => {
         {notifications.map((notification) => (
           <li key={notification.id} className="bg-white shadow rounded-md p-4 mb-2">
             <div className="flex items-center space-x-2">
-              {notification.sender && (
-                <div className="font-semibold">{notification.sender.username}</div>
+              {notification.sender_id && (
+                <div className="font-semibold">ユーザー ID: {notification.sender_id}</div>
               )}
-              <div>さんが</div>
+              {notification.sender_id && <div>さんが</div>}
               <div className="font-semibold">
-                {notification.type === 'like' && 'いいね！しました'}
-                {notification.type === 'comment' && 'コメントしました'}
-                {notification.type === 'follow' && 'あなたをフォローしました'}
-                {notification.type === 'message' && '新しいメッセージを送信しました'}
+                {notification.notification_type === 'like' && 'いいね！しました'}
+                {notification.notification_type === 'comment' && 'コメントしました'}
+                {notification.notification_type === 'follow' && 'あなたをフォローしました'}
+                {notification.notification_type === 'message' && '新しいメッセージを送信しました'}
               </div>
-              {notification.notifiable && (
+              {notification.notifiable_id && (
                 <div className="text-gray-500">
-                  {notification.type === 'comment' && `「${notification.notifiable.content?.substring(0, 20)}...」`}
-                  {notification.type === 'like' && (notification.notifiable.title ? `あなたの投稿「${notification.notifiable.title?.substring(0, 20)}...」に` : 'あなたの投稿に')}
-                  {notification.type === 'message' && `「${notification.notifiable.content?.substring(0, 20)}...」`}
+                  {notification.notification_type === 'comment' && `(コメント ID: ${notification.notifiable_id})`}
+                  {notification.notification_type === 'like' && `(投稿 ID: ${notification.notifiable_id})`}
+                  {notification.notification_type === 'follow' && ''}
+                  {notification.notification_type === 'message' && `(メッセージ ID: ${notification.notifiable_id})`}
                 </div>
               )}
             </div>
