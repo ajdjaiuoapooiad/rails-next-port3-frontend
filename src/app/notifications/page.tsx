@@ -12,21 +12,17 @@ interface Notification {
   read_at: string | null;
   created_at: string;
   updated_at: string;
-  sender?: {
-    id: number;
-    username: string;
-    // 他のユーザー情報
-  };
-  notifiable?: {
-    id: number;
-    content?: string;
-    title?: string;
-    // 他の関連エンティティの情報
-  };
+}
+
+interface UserProfile {
+  id: number;
+  username: string;
+  // その他のユーザー情報
 }
 
 const NotificationsPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [senders, setSenders] = useState<{ [userId: number]: UserProfile }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +51,28 @@ const NotificationsPage: React.FC = () => {
 
         const data: Notification[] = await response.json();
         setNotifications(data);
+
+        // 各通知の送信者情報を取得
+        data.forEach(async (notification) => {
+          if (notification.sender_id && !senders[notification.sender_id]) {
+            try {
+              const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profiles/${notification.sender_id}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
+              });
+              if (profileResponse.ok) {
+                const profileData: UserProfile = await profileResponse.json();
+                setSenders((prevSenders) => ({ ...prevSenders, [profileData.id]: profileData }));
+              } else {
+                console.error(`Failed to fetch profile for user ID: ${notification.sender_id}`);
+              }
+            } catch (err) {
+              console.error(`Error fetching profile for user ID: ${notification.sender_id}`, err);
+            }
+          }
+        });
+
         setLoading(false);
       } catch (err: any) {
         setError(`通知の取得中にエラーが発生しました: ${err.message}`);
@@ -66,7 +84,7 @@ const NotificationsPage: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div>通知を読み込み中...</div>;
+    return <div>通知と送信者の情報を読み込み中...</div>;
   }
 
   if (error) {
@@ -84,10 +102,10 @@ const NotificationsPage: React.FC = () => {
         {notifications.map((notification) => (
           <li key={notification.id} className="bg-white shadow rounded-md p-4 mb-2">
             <div className="flex items-center space-x-2">
-              {notification.sender_id && (
-                <div className="font-semibold">ユーザー ID: {notification.sender_id}</div>
+              {notification.sender_id && senders[notification.sender_id]?.username && (
+                <div className="font-semibold">{senders[notification.sender_id].username}</div>
               )}
-              {notification.sender_id && <div>さんが</div>}
+              {notification.sender_id && senders[notification.sender_id]?.username && <div>さんが</div>}
               <div className="font-semibold">
                 {notification.notification_type === 'like' && 'いいね！しました'}
                 {notification.notification_type === 'comment' && 'コメントしました'}
