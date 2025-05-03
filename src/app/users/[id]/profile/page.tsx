@@ -51,9 +51,7 @@ const UserProfilePage: React.FC = () => {
       if (!apiUrl) {
         throw new Error('API URLが設定されていません。');
       }
-      const token = localStorage.getItem('authToken');
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const response = await fetch(`${apiUrl}/profiles/${userId}`, { headers });
+      const response = await fetch(`${apiUrl}/profiles/${userId}`);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -117,11 +115,12 @@ const UserProfilePage: React.FC = () => {
       if (!token) {
         throw new Error('認証トークンが見つかりません。');
       }
-      const response = await fetch(`${apiUrl}/follows?following_id=${userProfile.id}`, {
+      const response = await fetch(`${apiUrl}/follows/${userProfile.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        body: JSON.stringify({ following_id: userProfile.id }),
       });
 
       if (!response.ok) {
@@ -211,27 +210,13 @@ const UserProfilePage: React.FC = () => {
           
           {/* アクションボタン */}
           <div className="mt-4 flex justify-around space-x-2">
-            {userProfile.id !== parseInt(userId || '', 10) && ( // 自分のプロフィールにはフォローボタンを表示しない
-              <>
-                {userProfile.is_following ? (
-                  <button
-                    onClick={handleUnfollow}
-                    disabled={followLoading}
-                    className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm"
-                  >
-                    {followLoading ? 'フォロー解除中...' : 'フォロー中'}
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleFollow}
-                    disabled={followLoading}
-                    className="flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm"
-                  >
-                    {followLoading ? 'フォロー中...' : 'フォロー'}
-                  </button>
-                )}
-              </>
-            )}
+            <button
+              onClick={handleUnfollow}
+              disabled={followLoading}
+              className="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm"
+            >
+              {followLoading ? 'フォロー解除中...' : 'フォロー中'}
+            </button>
             <button className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 rounded focus:outline-none focus:shadow-outline text-sm">
               メッセージ
             </button>
