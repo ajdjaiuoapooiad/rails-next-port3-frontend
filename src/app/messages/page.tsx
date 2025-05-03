@@ -95,7 +95,7 @@ export default function MessagesIndexPage() {
 
   return (
     <div className="bg-gray-50 min-h-screen py-6 sm:py-8 lg:py-12">
-      <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-2xl font-bold mb-6 text-center">メッセージ</h1>
         {loading ? (
           <div className="p-4 text-gray-600 text-center">メッセージを読み込み中...</div>
