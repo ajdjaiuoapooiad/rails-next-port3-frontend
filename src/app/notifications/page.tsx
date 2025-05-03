@@ -50,10 +50,12 @@ const NotificationsPage: React.FC = () => {
         }
 
         const data: Notification[] = await response.json();
-        setNotifications(data);
+        // created_at で降順にソート
+        const sortedNotifications = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        setNotifications(sortedNotifications);
 
         // 各通知の送信者情報を取得
-        data.forEach(async (notification) => {
+        sortedNotifications.forEach(async (notification) => {
           if (notification.sender_id && !senders[notification.sender_id]) {
             try {
               const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profiles/${notification.sender_id}`, {
