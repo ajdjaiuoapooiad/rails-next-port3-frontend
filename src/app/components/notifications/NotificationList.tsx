@@ -62,16 +62,35 @@ interface NotificationListProps {
   senders: { [userId: number]: { id: number; username: string } };
 }
 
-const NotificationList: React.FC<NotificationListProps> = ({ notifications, senders }) => (
-  <ul>
-    {notifications.map((notification) => (
-      <NotificationItem
-        key={notification.id}
-        notification={notification}
-        senderUsername={notification.sender_id ? senders[notification.sender_id]?.username : undefined}
-      />
-    ))}
-  </ul>
-);
+const NotificationList: React.FC<NotificationListProps> = ({ notifications, senders }) => {
+  const userId = localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : null;
+
+  // userId が存在する場合のみフィルタリング
+  const myNotifications = userId ? notifications.filter(
+    (notification) => notification.recipient_id === userId
+  ) : [];
+
+  return (
+    <ul>
+      {myNotifications.map((notification) => (
+        <NotificationItem
+          key={notification.id}
+          notification={notification}
+          senderUsername={notification.sender_id ? senders[notification.sender_id]?.username : undefined}
+        />
+      ))}
+      {myNotifications.length === 0 && userId !== null && (
+        <li className="bg-white shadow rounded-md p-4 mb-2 text-gray-600 text-center">
+          まだ通知はありません。
+        </li>
+      )}
+      {userId === null && (
+        <li className="bg-white shadow rounded-md p-4 mb-2 text-gray-600 text-center">
+          ログインして通知を確認してください。
+        </li>
+      )}
+    </ul>
+  );
+};
 
 export default NotificationList;
