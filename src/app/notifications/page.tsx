@@ -1,6 +1,8 @@
+// pages/notifications.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
 
 interface Notification {
   id: number;
@@ -50,7 +52,6 @@ const NotificationsPage: React.FC = () => {
         }
 
         const data: Notification[] = await response.json();
-        // created_at で降順にソート
         const sortedNotifications = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         setNotifications(sortedNotifications);
 
@@ -86,52 +87,56 @@ const NotificationsPage: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div>通知と送信者の情報を読み込み中...</div>;
+    return <div className="flex justify-center items-center h-screen">通知と送信者の情報を読み込み中...</div>;
   }
 
   if (error) {
-    return <div>エラーが発生しました: {error}</div>;
+    return <div className="flex justify-center items-center h-screen">エラーが発生しました: {error}</div>;
   }
 
   if (notifications.length === 0) {
-    return <div>まだ通知はありません。</div>;
+    return <div className="flex justify-center items-center h-screen">まだ通知はありません。</div>;
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-4">通知</h1>
-      <ul>
-        {notifications.map((notification) => (
-          <li key={notification.id} className="bg-white shadow rounded-md p-4 mb-2">
-            <div className="flex items-center space-x-2">
-              {notification.sender_id && senders[notification.sender_id]?.username && (
-                <div className="font-semibold">{senders[notification.sender_id].username}</div>
-              )}
-              {notification.sender_id && senders[notification.sender_id]?.username && <div>さんが</div>}
-              <div className="font-semibold">
-                {notification.notification_type === 'like' && 'いいね！しました'}
-                {notification.notification_type === 'comment' && 'コメントしました'}
-                {notification.notification_type === 'follow' && 'あなたをフォローしました'}
-                {notification.notification_type === 'message' && '新しいメッセージを送信しました'}
-              </div>
-              {notification.notifiable_id && (
-                <div className="text-gray-500">
-                  {notification.notification_type === 'comment' && `(コメント ID: ${notification.notifiable_id})`}
-                  {notification.notification_type === 'like' && `(投稿 ID: ${notification.notifiable_id})`}
-                  {notification.notification_type === 'follow' && ''}
-                  {notification.notification_type === 'message' && `(メッセージ ID: ${notification.notifiable_id})`}
+    <div className="bg-gray-100 py-6 sm:py-8 lg:py-12"> {/* 親要素の背景色などを設定 */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8"> {/* max-w と mx-auto で中央寄せと最大幅を設定 */}
+        <h1 className="text-xl font-bold text-gray-800 sm:text-2xl lg:text-3xl text-center mb-6">
+          通知
+        </h1>
+        <ul>
+          {notifications.map((notification) => (
+            <li key={notification.id} className="bg-white shadow rounded-md p-4 mb-2">
+              <div className="flex items-center space-x-2">
+                {notification.sender_id && senders[notification.sender_id]?.username && (
+                  <div className="font-semibold">{senders[notification.sender_id].username}</div>
+                )}
+                {notification.sender_id && senders[notification.sender_id]?.username && <div>さんが</div>}
+                <div className="font-semibold">
+                  {notification.notification_type === 'like' && 'いいね！しました'}
+                  {notification.notification_type === 'comment' && 'コメントしました'}
+                  {notification.notification_type === 'follow' && 'あなたをフォローしました'}
+                  {notification.notification_type === 'message' && '新しいメッセージを送信しました'}
                 </div>
+                {notification.notifiable_id && (
+                  <div className="text-gray-500">
+                    {notification.notification_type === 'comment' && `(コメント ID: ${notification.notifiable_id})`}
+                    {notification.notification_type === 'like' && `(投稿 ID: ${notification.notifiable_id})`}
+                    {notification.notification_type === 'follow' && ''}
+                    {notification.notification_type === 'message' && `(メッセージ ID: ${notification.notifiable_id})`}
+                  </div>
+                )}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">
+                {new Date(notification.created_at).toLocaleString()}
+              </div>
+              {!notification.read_at && (
+                <div className="text-xs text-blue-500 mt-1">未読</div>
               )}
-            </div>
-            <div className="text-sm text-gray-600 mt-1">
-              {new Date(notification.created_at).toLocaleString()}
-            </div>
-            {!notification.read_at && (
-              <div className="text-xs text-blue-500 mt-1">未読</div>
-            )}
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };
