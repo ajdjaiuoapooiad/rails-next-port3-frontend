@@ -186,44 +186,45 @@ const Navbar: React.FC<NavbarProps> = () => {
           </Link>
         </div>
         <div className="relative flex items-center space-x-4">
-          <div
-            ref={notificationsDropdownRef}
-            onMouseEnter={openNotificationsDropdown}
-            onMouseLeave={closeNotificationsDropdown}
-            className="relative"
-          >
-            <button className="text-gray-300 hover:text-white focus:outline-none">
-              <span className="sr-only">Notifications</span>
-              <BellIcon className="h-6 w-6 mr-8" />
-              {notifications.filter(n => !n.read_at).length > 0 && (
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
-                  {notifications.filter(n => !n.read_at).length > 5 ? '5+' : notifications.filter(n => !n.read_at).length}
-                </span>
-              )}
-            </button>
-            {isNotificationsDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                <div className="p-2">
-                  {notifications.length > 0 ? (
-                    <NotificationList
-                      notifications={notifications.slice(0, 5)}
-                      senders={senders}
-                    />
-                  ) : (
-                    <div className="text-gray-600 p-2">まだ通知はありません。</div>
-                  )}
-                  {notifications.length > 5 && (
-                    <Link href="/notifications" className="block text-center text-blue-500 hover:underline p-2">
-                      すべて表示
-                    </Link>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
 
           {currentUserProfile ? (
             <>
+              <div
+                ref={notificationsDropdownRef}
+                onMouseEnter={openNotificationsDropdown}
+                onMouseLeave={closeNotificationsDropdown}
+                className="relative"
+              >
+                <button className="text-gray-300 hover:text-white focus:outline-none">
+                  <span className="sr-only">Notifications</span>
+                  <BellIcon className="h-6 w-6 mr-8" />
+                  {notifications.filter(n => !n.read_at).length > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                      {notifications.filter(n => !n.read_at).length > 5 ? '5+' : notifications.filter(n => !n.read_at).length}
+                    </span>
+                  )}
+                </button>
+                {isNotificationsDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                    <div className="p-2">
+                      {notifications.length > 0 ? (
+                        <NotificationList
+                          notifications={notifications.slice(0, 5)}
+                          senders={senders}
+                        />
+                      ) : (
+                        <div className="text-gray-600 p-2">まだ通知はありません。</div>
+                      )}
+                      {notifications.length > 5 && (
+                        <Link href="/notifications" className="block text-center text-blue-500 hover:underline p-2">
+                          すべて表示
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               <Link href="/auth/login" className="text-gray-300 hover:text-white">
                 メッセージ
               </Link>

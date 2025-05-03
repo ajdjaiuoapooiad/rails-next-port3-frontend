@@ -12,11 +12,10 @@ interface Conversation {
 }
 
 const ConversationItem = ({ conversation }: { conversation: Conversation }) => {
-  const otherParticipants = conversation.participants.filter(
-    (p) => p.id !== (localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : 0)
-  );
-  const participantNames = otherParticipants.map((p) => p.username).join(', ');
-  const participantIcons = otherParticipants.slice(0, 2).map((p) => (
+  const currentUserId = localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : 0;
+  const otherParticipants = conversation.participants.filter(p => p.id !== currentUserId);
+  const participantNames = otherParticipants.map(p => p.username).join(', ');
+  const participantIcons = otherParticipants.slice(0, 2).map(p => (
     <div
       key={p.id}
       className="w-8 h-8 rounded-full overflow-hidden relative"
@@ -28,12 +27,11 @@ const ConversationItem = ({ conversation }: { conversation: Conversation }) => {
           {p.username.charAt(0).toUpperCase()}
         </div>
       )}
-      {otherParticipants.length > 2 &&
-        otherParticipants.indexOf(p) === 1 && (
-          <div className="absolute top-0 left-0 w-full h-full bg-black opacity-50 flex items-center justify-center text-white text-xs rounded-full">
-            +{otherParticipants.length - 2}
-          </div>
-        )}
+      {otherParticipants.length > 2 && otherParticipants.indexOf(p) === 1 && (
+        <div className="absolute top-0 left-0 w-full h-full bg-black opacity-50 flex items-center justify-center text-white text-xs rounded-full">
+          +{otherParticipants.length - 2}
+        </div>
+      )}
     </div>
   ));
 
@@ -64,6 +62,8 @@ export default function MessagesIndexPage() {
 
   useEffect(() => {
     async function fetchConversations() {
+      setLoading(true);
+      setError(null);
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         if (!apiUrl) throw new Error("API URL が設定されていません。");
@@ -77,15 +77,15 @@ export default function MessagesIndexPage() {
         if (!res.ok) {
           const errorData = await res.json();
           console.error("Error fetching conversations:", errorData);
-          throw new Error(`メッセージの読み込みに失敗しました (${res.status})`);
+          throw new Error(`メッセージの読み込みに失敗しました (${res.status}: ${errorData?.message || res.statusText})`);
         }
 
         const data: Conversation[] = await res.json();
         setConversations(data);
-        setLoading(false);
       } catch (e: any) {
         console.error("An error occurred while fetching conversations:", e);
-        setError("メッセージの読み込み中にエラーが発生しました。");
+        setError(`メッセージの読み込み中にエラーが発生しました: ${e.message}`);
+      } finally {
         setLoading(false);
       }
     }
@@ -93,28 +93,26 @@ export default function MessagesIndexPage() {
     fetchConversations();
   }, []);
 
-  if (loading) {
-    return <div className="p-4 text-gray-600">メッセージを読み込み中...</div>;
-  }
-
-  if (error) {
-    return <div className="p-4 text-red-500">{error}</div>;
-  }
-
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">メッセージ</h1>
-      {conversations && conversations.length > 0 ? (
-        <ul className="space-y-2">
-          {conversations.map((conversation) => (
-            <li key={conversation.id}>
-              <ConversationItem conversation={conversation} />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-gray-600">まだメッセージはありません。</p>
-      )}
+    <div className="bg-gray-50 min-h-screen py-6 sm:py-8 lg:py-12">
+      <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-2xl font-bold mb-6 text-center">メッセージ</h1>
+        {loading ? (
+          <div className="p-4 text-gray-600 text-center">メッセージを読み込み中...</div>
+        ) : error ? (
+          <div className="p-4 text-red-500 text-center">{error}</div>
+        ) : conversations && conversations.length > 0 ? (
+          <ul className="space-y-2">
+            {conversations.map((conversation) => (
+              <li key={conversation.id}>
+                <ConversationItem conversation={conversation} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-600 text-center">まだメッセージはありません。</p>
+        )}
+      </div>
     </div>
   );
 }
