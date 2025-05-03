@@ -110,7 +110,7 @@ const Navbar: React.FC<NavbarProps> = () => {
 
           {currentUserProfile ? (
             <>
-            <Link href="/auth/login" className="text-gray-300 hover:text-white">
+            <Link href="/notifications" className="text-gray-300 hover:text-white">
                 通知
               </Link>
 
