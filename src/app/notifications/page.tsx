@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from 'react';
 
-
 interface Notification {
   id: number;
   recipient_id: number;
@@ -27,6 +26,7 @@ const NotificationsPage: React.FC = () => {
   const [senders, setSenders] = useState<{ [userId: number]: UserProfile }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const userId = localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : null; // userId を取得
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -52,7 +52,9 @@ const NotificationsPage: React.FC = () => {
         }
 
         const data: Notification[] = await response.json();
-        const sortedNotifications = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        // 自分の通知のみをフィルタリング
+        const myNotifications = data.filter((notification) => notification.recipient_id === userId);
+        const sortedNotifications = myNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         setNotifications(sortedNotifications);
 
         // 各通知の送信者情報を取得
@@ -83,8 +85,12 @@ const NotificationsPage: React.FC = () => {
       }
     };
 
-    fetchNotifications();
-  }, []);
+    if (userId !== null) { // userId が存在する場合のみ API を呼び出す
+      fetchNotifications();
+    } else {
+      setLoading(false);
+    }
+  }, [userId]); // userId が変更されたときも再実行
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">通知と送信者の情報を読み込み中...</div>;
@@ -99,8 +105,8 @@ const NotificationsPage: React.FC = () => {
   }
 
   return (
-    <div className="bg-gray-100 py-6 sm:py-8 lg:py-12"> {/* 親要素の背景色などを設定 */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8"> {/* max-w と mx-auto で中央寄せと最大幅を設定 */}
+    <div className="bg-gray-100 py-6 sm:py-8 lg:py-12">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-xl font-bold text-gray-800 sm:text-2xl lg:text-3xl text-center mb-6">
           通知
         </h1>
