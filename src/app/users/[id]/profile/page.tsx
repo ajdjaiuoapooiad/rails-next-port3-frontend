@@ -51,7 +51,12 @@ const UserProfilePage: React.FC = () => {
       if (!apiUrl) {
         throw new Error('API URLが設定されていません。');
       }
-      const response = await fetch(`${apiUrl}/profiles/${userId}`);
+      const response = await fetch(`${apiUrl}/profiles/${userId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
