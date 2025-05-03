@@ -35,7 +35,7 @@ const NotificationsPage: React.FC = () => {
           return;
         }
 
-        const response = await fetch('/api/v1/notifications', { // バックエンドの通知 API エンドポイント
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, { // バックエンドの通知 API エンドポイント
           headers: {
             'Authorization': `Bearer ${token}`,
           },
