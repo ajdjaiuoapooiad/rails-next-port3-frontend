@@ -98,72 +98,74 @@ export default function MessageDetailPage() {
   };
 
   if (loading) {
-    return <div className="p-6 text-gray-600">メッセージを読み込み中...</div>;
+    return <div className="p-6 text-gray-600 text-center">メッセージを読み込み中...</div>;
   }
 
   if (error) {
-    return <div className="p-6 text-red-500">エラー: {error}</div>;
+    return <div className="p-6 text-red-500 text-center">エラー: {error}</div>;
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
-      <div className="bg-white border-b p-4">
-        <h2 className="text-xl font-bold">会話 ID: {conversationId}</h2>
-        {/* 必要に応じて参加者情報などを表示 */}
-      </div>
-      <div className="flex-grow overflow-y-auto p-4 space-y-2">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`rounded-md shadow-sm p-3 w-fit max-w-[80%] ${
-              msg.user.id === (localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : 0)
-                ? 'bg-blue-100 text-blue-800 ml-auto'
-                : 'bg-gray-300 text-gray-800 mr-auto'
-            }`}
-          >
-            <div className="flex items-start space-x-2">
-              <div className="w-6 h-6 rounded-full overflow-hidden relative">
-                {msg.user.profile?.user_icon_url ? (
-                  <img src={msg.user.profile.user_icon_url} alt={msg.user.username} className="object-cover w-full h-full" />
-                ) : (
-                  <div className="w-full h-full bg-gray-400 flex items-center justify-center text-white text-xs">
-                    {msg.user.username.charAt(0).toUpperCase()}
+    <div className="flex justify-center bg-gray-100 min-h-screen"> {/* 水平方向中央寄せ */}
+      <div className="max-w-2xl w-full flex flex-col h-screen"> {/* 最大幅と縦方向 Flexbox */}
+        <div className="bg-white border-b p-4">
+          <h2 className="text-xl font-bold text-center">会話 ID: {conversationId}</h2> {/* タイトル中央寄せ */}
+          {/* 必要に応じて参加者情報などを表示 */}
+        </div>
+        <div className="flex-grow overflow-y-auto p-4 space-y-2">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`rounded-md shadow-sm p-3 w-fit max-w-[80%] ${
+                msg.user?.id === (localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : 0)
+                  ? 'bg-blue-100 text-blue-800 ml-auto'
+                  : 'bg-gray-300 text-gray-800 mr-auto'
+              }`}
+            >
+              <div className="flex items-start space-x-2">
+                <div className="w-6 h-6 rounded-full overflow-hidden relative">
+                  {msg.user?.profile?.user_icon_url ? (
+                    <img src={msg.user.profile.user_icon_url} alt={msg.user.username} className="object-cover w-full h-full" />
+                  ) : (
+                    <div className="w-full h-full bg-gray-400 flex items-center justify-center text-white text-xs">
+                      {msg.user?.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">{msg.user?.username}</div>
+                  <p className="text-gray-700 break-words">{msg.content}</p>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {formatDistanceToNowStrict(new Date(msg.created_at), { locale: ja, addSuffix: true })}
                   </div>
-                )}
-              </div>
-              <div>
-                <div className="text-sm font-semibold">{msg.user.username}</div>
-                <p className="text-gray-700 break-words">{msg.content}</p>
-                <div className="text-xs text-gray-500 mt-1">
-                  {formatDistanceToNowStrict(new Date(msg.created_at), { locale: ja, addSuffix: true })}
                 </div>
               </div>
             </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+        <div className="bg-white border-t p-4">
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              className="flex-grow border rounded-md p-2 focus:ring focus:ring-blue-300 focus:outline-none"
+              placeholder="メッセージを入力..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
+            <button
+              className="bg-blue-500 text-white rounded-md p-2 hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
+              onClick={handleSendMessage}
+            >
+              送信
+            </button>
           </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="bg-white border-t p-4">
-        <div className="flex space-x-2">
-          <input
-            type="text"
-            className="flex-grow border rounded-md p-2 focus:ring focus:ring-blue-300 focus:outline-none"
-            placeholder="メッセージを入力..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-          />
-          <button
-            className="bg-blue-500 text-white rounded-md p-2 hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
-            onClick={handleSendMessage}
-          >
-            送信
-          </button>
         </div>
       </div>
     </div>
