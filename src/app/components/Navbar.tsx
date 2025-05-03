@@ -193,7 +193,8 @@ const Navbar: React.FC<NavbarProps> = () => {
             className="relative"
           >
             <button className="text-gray-300 hover:text-white focus:outline-none">
-              <BellIcon className="h-6 w-6" />
+              <span className="sr-only">Notifications</span>
+              <BellIcon className="h-6 w-6 mr-8" />
               {notifications.filter(n => !n.read_at).length > 0 && (
                 <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
                   {notifications.filter(n => !n.read_at).length > 5 ? '5+' : notifications.filter(n => !n.read_at).length}
