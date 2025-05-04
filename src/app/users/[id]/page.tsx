@@ -119,79 +119,83 @@ const UserDetailPage = () => {
     };
 
     return (
-        <div>
-            <h1>ユーザー詳細</h1>
-            <div className="mb-4 p-4 border rounded">
-                <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center">
-                        {(user.user_icon_url || user.avatar) && (
-                            <img
-                                src={user.user_icon_url || user.avatar || '/images/default-avatar.png'}
-                                alt={`${user.username}のアイコン`}
-                                className="w-16 h-16 rounded-full mr-4 object-cover"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = '/images/default-avatar.png';
-                                }}
-                            />
-                        )}
-                        <div>
-                            <h2 className="text-xl font-semibold">{user.display_name || user.username}</h2>
-                            <p className="text-gray-500">@{user.username}</p>
+        <div className="flex justify-center items-center min-h-screen bg-gray-100 py-6 sm:py-8 lg:py-12"> {/* 修正 */}
+            <div className="max-w-md w-full px-4 sm:px-6 lg:px-8 bg-white rounded-md shadow-md"> {/* 修正 */}
+                <h1 className="text-xl font-bold text-gray-800 sm:text-2xl lg:text-3xl text-center mb-6">ユーザー詳細</h1>
+                <div className="mb-4 p-4 border rounded">
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                            {(user.user_icon_url || user.avatar) && (
+                                <img
+                                    src={user.user_icon_url || user.avatar || '/images/default-avatar.png'}
+                                    alt={`${user.username}のアイコン`}
+                                    className="w-16 h-16 rounded-full mr-4 object-cover"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = '/images/default-avatar.png';
+                                    }}
+                                />
+                            )}
+                            <div>
+                                <h2 className="text-xl font-semibold">{user.display_name || user.username}</h2>
+                                <p className="text-gray-500">@{user.username}</p>
+                            </div>
                         </div>
+                        {isCurrentUser && !isEditing && (
+                            <button onClick={handleEditClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                編集
+                            </button>
+                        )}
                     </div>
-                    {isCurrentUser && !isEditing && (
-                        <button onClick={handleEditClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            編集
-                        </button>
+
+                    {isEditing ? (
+                        <form onSubmit={handleSubmit} className="mt-4">
+                            <div className="mb-2">
+                                <label htmlFor="displayName" className="block text-gray-700 text-sm font-bold mb-2">
+                                    表示名:
+                                </label>
+                                <input
+                                    type="text"
+                                    id="displayName"
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    value={displayName}
+                                    onChange={(e) => setDisplayName(e.target.value)}
+                                />
+                            </div>
+                            <div className="mb-2">
+                                <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
+                                    メールアドレス:
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex items-center justify-end">
+                                <button
+                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2"
+                                    type="submit"
+                                >
+                                    保存
+                                </button>
+                                <button onClick={handleCancelEdit} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                                    キャンセル
+                                </button>
+                            </div>
+                        </form>
+                    ) : (
+                        <>
+                            <p><strong>メールアドレス:</strong> {user?.email}</p>
+                            {/* 他のユーザー情報があればここに表示 */}
+                        </>
                     )}
                 </div>
-
-                {isEditing ? (
-                    <form onSubmit={handleSubmit} className="mt-4">
-                        <div className="mb-2">
-                            <label htmlFor="displayName" className="block text-gray-700 text-sm font-bold mb-2">
-                                表示名:
-                            </label>
-                            <input
-                                type="text"
-                                id="displayName"
-                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                value={displayName}
-                                onChange={(e) => setDisplayName(e.target.value)}
-                            />
-                        </div>
-                        <div className="mb-2">
-                            <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
-                                メールアドレス:
-                            </label>
-                            <input
-                                type="email"
-                                id="email"
-                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex items-center justify-end">
-                            <button
-                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2"
-                                type="submit"
-                            >
-                                保存
-                            </button>
-                            <button onClick={handleCancelEdit} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
-                                キャンセル
-                            </button>
-                        </div>
-                    </form>
-                ) : (
-                    <>
-                        <p><strong>メールアドレス:</strong> {user?.email}</p>
-                        {/* 他のユーザー情報があればここに表示 */}
-                    </>
-                )}
+                <div className="text-center mt-4">
+                    <Link href="/users/index" className="text-blue-500 hover:underline">ユーザー一覧に戻る</Link>
+                </div>
             </div>
-            <Link href="/users/index">ユーザー一覧に戻る</Link>
         </div>
     );
 };
