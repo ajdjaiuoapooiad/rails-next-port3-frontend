@@ -212,10 +212,10 @@ const UserProfilePage: React.FC = () => {
                                 {userProfile.bio}
                             </p>
                         )}
-                        {userProfile.location && <p className="text-gray-700 mt-1 text-sm">場所: {userProfile.location}</p>}
+                        {userProfile.location && <p className="text-gray-700 mt-1 text-sm"><span className='font-bold'>場所:</span> {userProfile.location}</p>}
                         {userProfile.website && (
                             <p className="text-gray-700 mt-1 text-sm">
-                                ウェブサイト: <a href={userProfile.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{userProfile.website}</a>
+                                <span className='font-bold'>ウェブサイト:</span> <a href={userProfile.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{userProfile.website}</a>
                             </p>
                         )}
                         {/* 他のプロフィール情報を表示 */}
