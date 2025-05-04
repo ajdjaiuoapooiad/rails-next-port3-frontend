@@ -154,7 +154,7 @@ const CurrentUserPostList: React.FC<PostListProps> = ({ userId }) => {
                   {new Date(post.created_at).toLocaleDateString()}
                 </p>
               </div>
-              <p className="text-gray-700 text-sm mt-2">{post.content}</p>
+
               <div className="flex justify-between text-gray-500 text-sm mt-2">
                 <button className="flex items-center space-x-1 hover:text-blue-500 focus:outline-none">
                   <ChatBubbleLeftIcon className="h-5 w-5" />
