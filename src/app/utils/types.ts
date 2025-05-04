@@ -30,3 +30,19 @@ export interface UserProfile {
     bg_image_url?: string;
     is_following?: boolean;
 }
+export interface Post {
+    id: number;
+    user_id: number; // 追加
+    content: string;
+    created_at: string;
+    updated_at?: string;
+    user?: {
+      id: number;
+      username?: string;
+      user_icon_url?: string;
+    };
+    likes_count?: number;
+    is_liked_by_current_user?: boolean;
+    image_url?: string | null;
+    video_url?: string | null;
+  }

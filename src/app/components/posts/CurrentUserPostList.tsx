@@ -9,8 +9,8 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import LikeButton from './LikeButton';
-import { Post } from '@/types/post';
 import { useRouter } from 'next/navigation';
+import { Post } from '@/app/utils/types';
 
 interface PostListProps {
   userId?: number; // 特定のユーザーの投稿をフェッチする場合に使用
@@ -22,8 +22,9 @@ const CurrentUserPostList: React.FC<PostListProps> = ({ userId }) => {
   const [error, setError] = useState<string | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const router = useRouter();
-  const dropdownRef = useRef<HTMLDivElement>(null); // ドロップダウンメニューの ref
-  const ellipsisButtonRef = useRef<HTMLButtonElement>(null); // 「...」ボタンの ref
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const ellipsisButtonRef = useRef<HTMLButtonElement>(null);
+  const loggedInUserId = localStorage.getItem('userId'); // localStorage からログインユーザーIDを取得
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -74,9 +75,12 @@ const CurrentUserPostList: React.FC<PostListProps> = ({ userId }) => {
     );
   };
 
-  const toggleDropdown = (postId: number, event: React.MouseEvent<HTMLButtonElement>) => {
-    setOpenDropdownId((prevId) => (prevId === postId ? null : postId));
-    ellipsisButtonRef.current = event.currentTarget; // クリックされたボタンを ref に保存
+  const toggleDropdown = (postId: number, event: React.MouseEvent<HTMLButtonElement>, postUserId: number | undefined) => {
+    // 投稿の user_id とログインしている user_id が一致する場合のみドロップダウンを開く
+    if (postUserId?.toString() === loggedInUserId) {
+      setOpenDropdownId((prevId) => (prevId === postId ? null : postId));
+      ellipsisButtonRef.current = event.currentTarget;
+    }
   };
 
   const closeDropdown = () => {
@@ -92,6 +96,7 @@ const CurrentUserPostList: React.FC<PostListProps> = ({ userId }) => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${postId}`, {
         method: 'DELETE',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
         },
       });
@@ -166,10 +171,10 @@ const CurrentUserPostList: React.FC<PostListProps> = ({ userId }) => {
                 </div>
                 <div className="relative">
                   <button
-                    onClick={(event) => toggleDropdown(post.id, event)} // event を渡す
+                    onClick={(event) => toggleDropdown(post.id, event, post.user?.id)} // post.user?.id を渡す
                     className="hover:text-gray-700 focus:outline-none"
                     aria-label="投稿オプション"
-                    ref={ellipsisButtonRef} // ref を設定
+                    ref={ellipsisButtonRef}
                   >
                     <EllipsisHorizontalIcon className="h-5 w-5" />
                   </button>
