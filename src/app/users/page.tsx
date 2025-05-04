@@ -2,14 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { User } from '../utils/types';
 
-
-interface User {
-    id: number;
-    username: string;
-    display_name: string | null;
-    avatar: string | null;
-}
 
 const UsersIndexPage = () => {
     const [users, setUsers] = useState<User[]>([]);
@@ -63,11 +57,14 @@ const UsersIndexPage = () => {
                 {users.map((user) => (
                     <li key={user.id} className="mb-2 p-2 border rounded">
                         <div className="flex items-center">
-                            {user.avatar && (
+                            {(user.user_icon_url || user.avatar) && (
                                 <img
-                                    src={user.avatar}
-                                    alt={`${user.username}のアバター`}
+                                    src={user.user_icon_url || user.avatar || '/images/default-avatar.png'}
+                                    alt={`${user.username}のアイコン`}
                                     className="w-8 h-8 rounded-full mr-2 object-cover"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = '/images/default-avatar.png';
+                                    }}
                                 />
                             )}
                             <div>
