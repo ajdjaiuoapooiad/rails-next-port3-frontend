@@ -180,7 +180,7 @@ const UserProfilePage: React.FC = () => {
             }
 
             // 会話を作成
-            const conversationResponse = await fetch(`${apiUrl}/api/v1/conversations`, {
+            const conversationResponse = await fetch(`${apiUrl}/conversations`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ const UserProfilePage: React.FC = () => {
 
             // 最初のメッセージを送信 (任意)
             const initialMessage = `はじめまして、${userProfile.username}さん。`;
-            const messageResponse = await fetch(`${apiUrl}/api/v1/conversations/${conversationId}/messages`, {
+            const messageResponse = await fetch(`${apiUrl}/conversations/${conversationId}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
