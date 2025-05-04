@@ -6,30 +6,10 @@ import Sidebar from './Sidebar';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { ChevronDownIcon, BellIcon } from '@heroicons/react/20/solid';
 import NotificationList from './notifications/NotificationList';
+import { userAgent } from 'next/server';
+import { UserProfile, Notification } from '../utils/types';
 
-interface UserProfile {
-  id: number;
-  username: string;
-  email: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  user_icon_url?: string;
-  bg_image_url?: string;
-  is_following?: boolean;
-}
 
-interface Notification {
-  id: number;
-  recipient_id: number;
-  sender_id: number | null;
-  notifiable_type: string;
-  notifiable_id: number;
-  notification_type: string;
-  read_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
 
 interface UserProfileShort {
   id: number;
@@ -73,6 +53,8 @@ const Navbar: React.FC<NavbarProps> = () => {
   const closeNotificationsDropdown = () => {
     setIsNotificationsDropdownOpen(false);
   };
+
+  const userId = localStorage.getItem('userId');
 
   useEffect(() => {
     const fetchCurrentUserProfile = async () => {
@@ -251,10 +233,10 @@ const Navbar: React.FC<NavbarProps> = () => {
                 </button>
                 {isDropdownOpen && (
                   <div ref={dropdownRef} className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                    <Link href="/profile" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                    <Link href={`/users/${userId}/profile`} className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
                       プロフィール
                     </Link>
-                    <Link href="/settings" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                    <Link href={`/users/${userId}`} className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
                       設定
                     </Link>
                     <Link href="/logout" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">

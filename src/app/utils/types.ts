@@ -6,3 +6,27 @@ export interface User {
     user_icon_url?: string | null;
     email: string; // 追加
 }
+
+export interface Notification {
+    id: number;
+    recipient_id: number;
+    sender_id: number | null;
+    notifiable_type: string;
+    notifiable_id: number;
+    notification_type: string;
+    read_at: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface UserProfile {
+    id: number;
+    username: string;
+    email: string;
+    bio?: string;
+    location?: string;
+    website?: string;
+    user_icon_url?: string;
+    bg_image_url?: string;
+    is_following?: boolean;
+}
