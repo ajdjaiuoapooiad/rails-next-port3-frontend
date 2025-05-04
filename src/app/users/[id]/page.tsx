@@ -16,8 +16,14 @@ const UserDetailPage = () => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null); // localStorage から取得する ID は文字列の可能性
 
     useEffect(() => {
+        // localStorage からログインしているユーザーの ID を取得
+        const storedUserId = localStorage.getItem('userId');
+        setLoggedInUserId(storedUserId);
+
+        // ユーザー情報を取得
         const fetchUser = async () => {
             if (!id) return;
             try {
@@ -62,25 +68,35 @@ const UserDetailPage = () => {
         return <div>ユーザーが見つかりません。</div>;
     }
 
+    // localStorage の ID と表示しているユーザーの ID を比較
+    const isCurrentUser = loggedInUserId === String(user.id); // 型を合わせて比較
+
     return (
         <div>
             <h1>ユーザー詳細</h1>
             <div className="mb-4 p-4 border rounded">
-                <div className="flex items-center mb-2">
-                    {(user.user_icon_url || user.avatar) && (
-                        <img
-                            src={user.user_icon_url || user.avatar || '/images/default-avatar.png'}
-                            alt={`${user.username}のアイコン`}
-                            className="w-16 h-16 rounded-full mr-4 object-cover"
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/images/default-avatar.png';
-                            }}
-                        />
-                    )}
-                    <div>
-                        <h2 className="text-xl font-semibold">{user.display_name || user.username}</h2>
-                        <p className="text-gray-500">@{user.username}</p>
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center">
+                        {(user.user_icon_url || user.avatar) && (
+                            <img
+                                src={user.user_icon_url || user.avatar || '/images/default-avatar.png'}
+                                alt={`${user.username}のアイコン`}
+                                className="w-16 h-16 rounded-full mr-4 object-cover"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/images/default-avatar.png';
+                                }}
+                            />
+                        )}
+                        <div>
+                            <h2 className="text-xl font-semibold">{user.display_name || user.username}</h2>
+                            <p className="text-gray-500">@{user.username}</p>
+                        </div>
                     </div>
+                    {isCurrentUser && (
+                        <Link href={`/users/${id}/edit`} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            編集
+                        </Link>
+                    )}
                 </div>
                 <p><strong>メールアドレス:</strong> {user.email}</p>
                 {/* 他のユーザー情報があればここに表示 */}
