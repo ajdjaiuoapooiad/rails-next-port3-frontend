@@ -26,6 +26,7 @@ const CurrentUserPostList: React.FC<PostListProps> = ({ userId }) => {
   const ellipsisButtonRef = useRef<HTMLButtonElement>(null);
   const loggedInUserId = localStorage.getItem('userId'); // localStorage からログインユーザーIDを取得
 
+
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -181,7 +182,7 @@ const CurrentUserPostList: React.FC<PostListProps> = ({ userId }) => {
                   {openDropdownId === post.id && (
                     <div ref={dropdownRef} className="absolute right-0 mt-2 w-32 bg-white shadow-md rounded-md z-10">
                       <button
-                        onClick={() => handleDeletePost(post.id)}
+                        onClick={() => router.push(`/posts/${post.id}/edit`) }
                         className="block w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 focus:outline-none"
                       >
                         編集
