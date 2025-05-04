@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { User } from '../utils/types';
-
+import { User } from '../../utils/types'; // 相対パスを修正
 
 const UsersIndexPage = () => {
     const [users, setUsers] = useState<User[]>([]);
@@ -51,12 +50,12 @@ const UsersIndexPage = () => {
     }
 
     return (
-        <div>
-            <h1>ユーザー一覧</h1>
-            <ul>
-                {users.map((user) => (
-                    <li key={user.id} className="mb-2 p-2 border rounded">
-                        <div className="flex items-center">
+        <div className="flex justify-center items-center min-h-screen bg-gray-100 py-6 sm:py-8 lg:py-12"> {/* 修正 */}
+            <div className="max-w-2xl w-full px-4 sm:px-6 lg:px-8 bg-white rounded-md shadow-md"> {/* 修正 */}
+                <h1 className="text-2xl font-semibold mb-4 text-center">ユーザー一覧</h1>
+                <ul>
+                    {users.map((user) => (
+                        <li key={user.id} className="mb-2 p-2 border rounded flex items-center">
                             {(user.user_icon_url || user.avatar) && (
                                 <img
                                     src={user.user_icon_url || user.avatar || '/images/default-avatar.png'}
@@ -73,11 +72,13 @@ const UsersIndexPage = () => {
                                     {user.username && <span className="text-gray-500 ml-1">(@{user.username})</span>}
                                 </Link>
                             </div>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-            <Link href="/">ホームに戻る</Link>
+                        </li>
+                    ))}
+                </ul>
+                <div className="text-center mt-4">
+                    <Link href="/" className="text-blue-500 hover:underline">ホームに戻る</Link>
+                </div>
+            </div>
         </div>
     );
 };
