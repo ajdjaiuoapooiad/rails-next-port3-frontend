@@ -94,9 +94,9 @@ const PostList: React.FC = () => {
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-700 mb-1">
-                  <Link href={`/posts/${post.id}`} className="hover:text-blue-500 transition duration-200">
-                    {post.content?.substring(0, 70) + '...'}
-                  </Link>
+                <Link href={`/posts/${post.id}`} className="hover:text-blue-500 transition duration-200">
+                  {post.content?.length > 70 ? post.content.substring(0, 70) + '...' : post.content}
+                </Link>
                 </h2>
                 <p className="text-sm text-gray-500">
                   {new Date(post.created_at).toLocaleDateString()}
