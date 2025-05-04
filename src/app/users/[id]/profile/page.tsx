@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import PostList from '@/app/components/posts/PostList';
 import Link from 'next/link';
+import CurrentUserPostList from '@/app/components/posts/CurrentUserPostList';
 
 interface UserProfile {
     id: number;
@@ -308,7 +309,7 @@ const UserProfilePage: React.FC = () => {
 
                     {/* コンテンツの表示 */}
                     <div className="mt-4">
-                        {activeTab === 'posts' && <div><PostList userId={userProfile.id} /></div>}
+                        {activeTab === 'posts' && <div><CurrentUserPostList userId={userProfile.id} /></div>}
                         {activeTab === 'liked' && <div>いいねした投稿リストを表示するコンポーネントをここに配置します。</div>}
                         {activeTab === 'following' && <div>フォロー中のユーザーリストを表示するコンポーネントをここに配置します。</div>}
                     </div>
