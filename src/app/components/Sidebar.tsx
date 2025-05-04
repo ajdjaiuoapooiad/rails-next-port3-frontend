@@ -168,7 +168,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                         <Link href="/bookmarks" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
                             ブックマーク
                         </Link>
-                        <Link href="/lists" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
+                        <Link href="/users" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
                             リスト
                         </Link>
                         <Link href="/communities" onClick={onClose} className="block py-2 text-gray-300 hover:text-white">
