@@ -179,44 +179,69 @@ const UserProfilePage: React.FC = () => {
                 return;
             }
 
-            // 会話を作成
-            const conversationResponse = await fetch(`${apiUrl}/conversations`, {
-                method: 'POST',
+            // 既存の会話を検索
+            const existingConversationResponse = await fetch(`${apiUrl}/conversations?recipient_id=${userProfile.id}`, {
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify({ recipient_id: userProfile.id }),
             });
 
-            if (!conversationResponse.ok) {
-                const errorData = await conversationResponse.json();
-                console.error('会話作成エラー:', errorData);
+            if (!existingConversationResponse.ok) {
+                const errorData = await existingConversationResponse.json();
+                console.error('既存の会話検索エラー:', errorData);
                 setConversationError(errorData?.error || 'メッセージの送信に失敗しました。');
                 return;
             }
 
-            const conversationData = await conversationResponse.json();
-            const conversationId = conversationData.id;
+            const existingConversations = await existingConversationResponse.json();
 
-            // 最初のメッセージを送信 (任意)
-            const initialMessage = `はじめまして、${userProfile.username}さん。`;
-            const messageResponse = await fetch(`${apiUrl}/conversations/${conversationId}/messages`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ content: initialMessage }),
-            });
+            if (existingConversations.length > 0) {
+                // 既存の会話があればそちらにリダイレクト
+                const conversationId = existingConversations[0].id; // 一番古い会話にリダイレクト
+                router.push(`/messages/${conversationId}`);
+            } else {
+                // 新しい会話を作成
+                const conversationResponse = await fetch(`${apiUrl}/conversations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ recipient_id: userProfile.id }),
+                });
 
-            if (!messageResponse.ok) {
-                const errorData = await messageResponse.json();
-                console.error('メッセージ送信エラー:', errorData);
-                setConversationError(errorData?.error || 'メッセージの送信に失敗しました。');
+                if (!conversationResponse.ok) {
+                    const errorData = await conversationResponse.json();
+                    console.error('会話作成エラー:', errorData);
+                    setConversationError(errorData?.error || 'メッセージの送信に失敗しました。');
+                    return;
+                }
+
+                const conversationData = await conversationResponse.json();
+                const conversationId = conversationData.id;
+
+                // 最初のメッセージを送信 (任意)
+                const initialMessage = `はじめまして、${userProfile.username}さん。`;
+                const messageResponse = await fetch(`${apiUrl}/conversations/${conversationId}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ content: initialMessage }),
+                });
+
+                if (!messageResponse.ok) {
+                    const errorData = await messageResponse.json();
+                    console.error('メッセージ送信エラー:', errorData);
+                    setConversationError(errorData?.error || 'メッセージの送信に失敗しました。');
+                }
+
+                router.push(`/messages/${conversationId}`);
             }
 
-            router.push(`/messages/${conversationId}`);
 
         } catch (error) {
             console.error('メッセージ送信処理中にエラーが発生しました:', error);
