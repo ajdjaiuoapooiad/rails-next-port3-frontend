@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User } from '@/app/utils/types';
-
 
 interface UserDetailPageParams {
     id: string;
@@ -13,17 +12,19 @@ interface UserDetailPageParams {
 const UserDetailPage = () => {
     const params = useParams<UserDetailPageParams>();
     const { id } = params;
+    const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null); // localStorage から取得する ID は文字列の可能性
+    const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [displayName, setDisplayName] = useState('');
+    const [email, setEmail] = useState('');
 
     useEffect(() => {
-        // localStorage からログインしているユーザーの ID を取得
         const storedUserId = localStorage.getItem('userId');
         setLoggedInUserId(storedUserId);
 
-        // ユーザー情報を取得
         const fetchUser = async () => {
             if (!id) return;
             try {
@@ -45,6 +46,8 @@ const UserDetailPage = () => {
                 }
                 const data: User = await response.json();
                 setUser(data);
+                setDisplayName(data.display_name || '');
+                setEmail(data.email);
             } catch (err: any) {
                 setError(err.message);
                 console.error(`ユーザー詳細取得エラー (ID: ${id}):`, err);
@@ -68,8 +71,52 @@ const UserDetailPage = () => {
         return <div>ユーザーが見つかりません。</div>;
     }
 
-    // localStorage の ID と表示しているユーザーの ID を比較
-    const isCurrentUser = loggedInUserId === String(user.id); // 型を合わせて比較
+    const isCurrentUser = loggedInUserId === String(user.id);
+
+    const handleEditClick = () => {
+        setIsEditing(true);
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setDisplayName(user.display_name || ''); // キャンセル時に元の値を戻す
+        setEmail(user.email);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+            const token = localStorage.getItem('authToken');
+            if (!apiUrl) {
+                throw new Error('API URLが設定されていません。');
+            }
+            const response = await fetch(`${apiUrl}/users/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    display_name: displayName,
+                    email: email,
+                }),
+            });
+
+            if (response.ok) {
+                const updatedUser = await response.json();
+                setUser(updatedUser); // 成功したら state を更新
+                setIsEditing(false); // 編集モードを閉じる
+                console.log('ユーザー情報が更新されました');
+            } else {
+                const errorData = await response.json();
+                setError(errorData?.errors?.join(', ') || 'ユーザー情報の更新に失敗しました');
+            }
+        } catch (err: any) {
+            setError(err.message);
+            console.error('ユーザー情報更新エラー:', err);
+        }
+    };
 
     return (
         <div>
@@ -92,14 +139,57 @@ const UserDetailPage = () => {
                             <p className="text-gray-500">@{user.username}</p>
                         </div>
                     </div>
-                    {isCurrentUser && (
-                        <Link href={`/users/${id}/edit`} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    {isCurrentUser && !isEditing && (
+                        <button onClick={handleEditClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                             編集
-                        </Link>
+                        </button>
                     )}
                 </div>
-                <p><strong>メールアドレス:</strong> {user.email}</p>
-                {/* 他のユーザー情報があればここに表示 */}
+
+                {isEditing ? (
+                    <form onSubmit={handleSubmit} className="mt-4">
+                        <div className="mb-2">
+                            <label htmlFor="displayName" className="block text-gray-700 text-sm font-bold mb-2">
+                                表示名:
+                            </label>
+                            <input
+                                type="text"
+                                id="displayName"
+                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                value={displayName}
+                                onChange={(e) => setDisplayName(e.target.value)}
+                            />
+                        </div>
+                        <div className="mb-2">
+                            <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
+                                メールアドレス:
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex items-center justify-end">
+                            <button
+                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2"
+                                type="submit"
+                            >
+                                保存
+                            </button>
+                            <button onClick={handleCancelEdit} className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+                                キャンセル
+                            </button>
+                        </div>
+                    </form>
+                ) : (
+                    <>
+                        <p><strong>メールアドレス:</strong> {user?.email}</p>
+                        {/* 他のユーザー情報があればここに表示 */}
+                    </>
+                )}
             </div>
             <Link href="/users/index">ユーザー一覧に戻る</Link>
         </div>

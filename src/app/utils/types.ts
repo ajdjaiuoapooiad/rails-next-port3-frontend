@@ -3,5 +3,6 @@ export interface User {
     username: string;
     display_name: string | null;
     avatar: string | null;
-    user_icon_url?: string | null; // 追加
+    user_icon_url?: string | null;
+    email: string; // 追加
 }
