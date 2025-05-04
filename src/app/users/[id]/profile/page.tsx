@@ -163,7 +163,7 @@ const UserProfilePage: React.FC = () => {
 
     return (
         <div className="bg-gray-100 py-8">
-            <div className="max-w-2xl mx-auto bg-white shadow-md rounded-md overflow-hidden">
+            <div className="max-w-3xl mx-auto bg-white shadow-md rounded-md overflow-hidden">
                 {/* 背景画像 */}
                 <div className="relative h-48 overflow-hidden">
                     {userProfile.bg_image_url ? (
@@ -207,7 +207,11 @@ const UserProfilePage: React.FC = () => {
                     <div className="mt-6 ml-32 text-left">
                         <h2 className="text-xl font-semibold text-gray-800">{userProfile.username}</h2>
                         <p className="text-gray-600 text-sm">{userProfile.email}</p>
-                        {userProfile.bio && <p className="text-gray-700 mt-2 text-sm">{userProfile.bio}</p>}
+                        {userProfile.bio && (
+                            <p className="text-gray-700 mt-2 text-sm" style={{ whiteSpace: 'pre-wrap' }}>
+                                {userProfile.bio}
+                            </p>
+                        )}
                         {userProfile.location && <p className="text-gray-700 mt-1 text-sm">場所: {userProfile.location}</p>}
                         {userProfile.website && (
                             <p className="text-gray-700 mt-1 text-sm">
