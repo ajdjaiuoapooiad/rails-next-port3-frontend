@@ -6,6 +6,7 @@ import CreatePostForm from '../components/posts/CreatePostForm';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card" // UI Components
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { Button } from "@/components/ui/button" // UI Components
 
 const PostIndexPage = () => {
   // 例: ローカルストレージから user_id と token を取得
@@ -22,13 +23,24 @@ const PostIndexPage = () => {
   if (!userId || !authToken) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-100">
-        <Alert variant="destructive" className="max-w-lg">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>ログインが必要です</AlertTitle>
-          <AlertDescription>
-            投稿を閲覧・作成するには、ログインしてください。
-          </AlertDescription>
-        </Alert>
+        <Card className="max-w-lg shadow-lg border-0">
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold text-center">ログインが必要です</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                投稿を閲覧・作成するには、ログインしてください。
+              </AlertDescription>
+            </Alert>
+            <div className="mt-4 text-center">
+              <Button asChild>
+                <a href="/login">ログインページへ</a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -39,7 +51,7 @@ const PostIndexPage = () => {
         <h1 className="text-3xl font-bold text-gray-900 text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
           みんなの投稿
         </h1>
-        <Card className="mb-6 shadow-lg">
+        <Card className="mb-8 shadow-lg border-0">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-800">新規投稿</CardTitle>
           </CardHeader>

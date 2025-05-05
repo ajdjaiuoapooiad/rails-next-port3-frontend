@@ -13,9 +13,13 @@ import {
 import Link from 'next/link';
 import LikeButton from '@/app/components/posts/LikeButton';
 import { Comment, Post } from '@/app/utils/types';
-
-
-
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 
 async function fetchPost(id: string): Promise<Post | null> {
     try {
@@ -194,129 +198,212 @@ export default function DetailPage({ params }: { params: { id: string } }) {
     };
 
     if (loading) {
-        return <div className="text-center py-4">読み込み中...</div>;
-    }
-
-    if (error) {
-        return <div className="text-center py-4 text-red-500">{error}</div>;
-    }
-
-    if (!post) {
-        return <div>投稿が見つかりませんでした。</div>;
-    }
-
-    return (
-        <div className="max-w-2xl mx-auto bg-white shadow-md rounded-md p-6 mt-8">
-            {/* 投稿の詳細表示 (省略) */}
-            <div className="flex items-start space-x-3 mb-4">
-                <div className="flex items-center flex-shrink-0">
-                    {post.user_icon_url ? (
-                        <img
-                            src={post.user_icon_url}
-                            alt={`${post.user?.display_name || post.user?.username || '不明'}のアイコン`}
-                            width={32}
-                            height={32}
-                            className="rounded-full object-cover mr-2"
-                            onError={(e) => {
-                                console.error('Failed to load user icon:', post.user_icon_url);
-                                (e.target as HTMLImageElement).onerror = null;
-                                (e.target as HTMLImageElement).src = '';
-                            }}
-                        />
-                    ) : (
-                        <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
-                    )}
-                    <Link href={`/users/${post.user_id}/profile`}>
-                        <span className="text-sm font-semibold text-gray-800 hover:text-blue-500 transition duration-200">
-                            {post.user?.display_name || post.user?.username || '不明'}
-                        </span>
-                    </Link>
-                </div>
-            </div>
-
-
-            <p className="text-gray-700 leading-relaxed mb-4" style={{ whiteSpace: 'pre-wrap' }}>{post.content}</p>
-            <div className="flex justify-between text-gray-500 text-sm mt-2">
-                <button className="flex items-center space-x-1 hover:text-blue-500 focus:outline-none">
-                    <ChatBubbleLeftIcon className="h-5 w-5" />
-                    <span className="text-gray-600 text-sm">{comments.length}</span>
-                </button>
-                <button className="flex items-center space-x-1 hover:text-green-500 focus:outline-none">
-                    {/* カスタム SVG リツイートアイコン */}
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046-.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
-                    </svg>
-                </button>
-                <div className="flex items-center space-x-1">
-                    <LikeButton
-                        postId={post.id}
-                        isLiked={post.is_liked_by_current_user || false}
-                        onLikeChange={handleLikeChange}
-                    />
-                    <span className="text-gray-600 text-sm">{post.likes_count || 0}</span>
-                </div>
-                <button className="flex items-center space-x-1 hover:text-gray-700 focus:outline-none">
-                    <ShareIcon className="h-5 w-5" />
-                    {/* <span className="text-gray-600 text-sm">{post.likes_count || 0}</span> */}
-                </button>
-                <button className="hover:text-gray-700 focus:outline-none">
-                    <EllipsisHorizontalIcon className="h-5 w-5" />
-                </button>
-            </div>
-            <div className="text-sm text-gray-500 mt-2">
-                <span><strong>作成日時:</strong> {new Date(post.created_at).toLocaleDateString()}</span>
-            </div>
-
-            {/* コメント表示 */}
-            <div className="mt-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">コメント</h3>
-                {loadingComments ? (
-                    <div className="text-gray-500">コメントを読み込み中...</div>
-                ) : errorComments ? (
-                    <div className="text-red-500">{errorComments}</div>
-                ) : comments.length > 0 ? (
-                    <ul>
-                        {comments.map((comment) => (
-                            <li key={comment.id} className="bg-gray-100 rounded-md p-3 mb-2">
-                                <div className="flex items-start space-x-2">
-                                    {comment.user_icon_url ? (
-                                        <img
-                                            src={comment.user_icon_url}
-                                            alt={`${comment.display_name || comment.user?.username || '不明'}のアイコン`}
-                                            width={24}
-                                            height={24}
-                                            className="rounded-full object-cover flex-shrink-0"
-                                            onError={(e) => {
-                                                console.error('Failed to load user icon:', comment.user?.user_icon_url);
-                                                (e.target as HTMLImageElement).onerror = null;
-                                                (e.target as HTMLImageElement).src = '';
-                                            }}
-                                        />
-                                    ) : (
-                                        <UserCircleIcon className="h-6 w-6 rounded-full text-gray-400 flex-shrink-0" />
-                                    )}
+        return (
+            <Card className="max-w-2xl mx-auto mt-8 border-0">
+                <CardHeader>
+                    <div className="flex items-center space-x-4">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div>
+                            <Skeleton className="h-6 w-32" />
+                            <Skeleton className="h-4 w-20 mt-1" />
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-6 w-1/2" />
+                        <div className="flex justify-between items-center">
+                            <Skeleton className="h-5 w-20" />
+                            <Skeleton className="h-5 w-20" />
+                        </div>
+                    </div>
+                    <div className="mt-6">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4"><Skeleton className="h-6 w-1/3" /></h3>
+                        {Array.from({ length: 2 }).map((_, i) => (
+                            <div key={i} className="mb-4">
+                                <div className="flex items-start space-x-4">
+                                    <Skeleton className="h-8 w-8 rounded-full" />
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <Link href={`/users/${comment.user_id}/profile`}>
-                                                  <p className="text-sm font-semibold text-gray-800  hover:text-blue-500 transition duration-200">
-                                                    {comment.user?.display_name || comment.user?.username || '不明'}
-                                                  </p>
-                                                </Link>
-                                                <p className="text-gray-700 text-sm">{comment.content}</p>
-                                                <p className="text-gray-500 text-xs">{new Date(comment.created_at).toLocaleDateString()}</p>
+                                                <Skeleton className="h-4 w-24" />
+                                                <Skeleton className="h-4 w-full mt-2" />
+                                                <Skeleton className="h-3 w-1/4 mt-2" />
                                             </div>
+                                            <Skeleton className="h-5 w-5" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2"><Skeleton className="h-6 w-1/3" /></h3>
+                        <Skeleton className="h-10 w-full" />
+                        <div className="mt-2">
+                            <Skeleton className="h-8 w-24" />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
 
+    if (error) {
+        return (
+            <Card className="max-w-2xl mx-auto mt-8 border-0">
+                <CardContent>
+                    <div className="text-center py-4 text-red-500">{error}</div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    if (!post) {
+        return (
+            <Card className="max-w-2xl mx-auto mt-8 border-0">
+                <CardContent>
+                    <div className="text-center py-4">投稿が見つかりませんでした。</div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    return (
+        <Card className="max-w-2xl mx-auto mt-8 border-0 shadow-lg transition-shadow hover:shadow-xl">
+            <CardHeader>
+                <div className="flex items-center space-x-4">
+                    <Avatar>
+                        {post.user_icon_url ? (
+                            <AvatarImage
+                                src={post.user_icon_url}
+                                alt={`${post.user?.display_name || post.user?.username || '不明'}のアイコン`}
+                                onError={(e) => {
+                                    console.error('Failed to load user icon:', post.user_icon_url);
+                                    (e.target as HTMLImageElement).onerror = null;
+                                    (e.target as HTMLImageElement).src = '';
+                                }}
+                            />
+                        ) : (
+                            <AvatarFallback className="text-gray-400">
+                                <UserCircleIcon className="h-8 w-8" />
+                            </AvatarFallback>
+                        )}
+                    </Avatar>
+                    <div>
+                        <CardTitle className="text-lg font-semibold">
+                            <Link href={`/users/${post.user_id}/profile`} className="hover:text-blue-500 transition-colors">
+                                {post.user?.display_name || post.user?.username || '不明'}
+                            </Link>
+                        </CardTitle>
+                        <CardDescription className="text-sm text-gray-500">
+                            {new Date(post.created_at).toLocaleDateString()}
+                        </CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <p className="text-gray-700 leading-relaxed mb-4 whitespace-pre-line">{post.content}</p>
+                <div className="flex justify-between items-center text-gray-500 text-sm">
+                    <div className="flex space-x-4">
+                        <Button variant="ghost" size="sm" className="hover:text-blue-500">
+                            <ChatBubbleLeftIcon className="h-5 w-5 mr-1" />
+                            <span>{comments.length}</span>
+                        </Button>
+                        <Button variant="ghost" size="sm" className="hover:text-green-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6 mr-1">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046-.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
+                            </svg>
+                        </Button>
+                        <div className="flex items-center">
+                            <LikeButton
+                                postId={post.id}
+                                isLiked={post.is_liked_by_current_user || false}
+                                onLikeChange={handleLikeChange}
+                            />
+                            <span className="text-gray-600 text-sm ml-1">{post.likes_count || 0}</span>
+                        </div>
+                    </div>
+                    <Button variant="ghost" size="icon" className="hover:text-gray-700 focus:outline-none">
+                        <EllipsisHorizontalIcon className="h-5 w-5" />
+                    </Button>
+                </div>
+            </CardContent>
+            <CardFooter className="text-sm text-gray-500">
+                <span>作成日時: {new Date(post.created_at).toLocaleDateString()}</span>
+            </CardFooter>
+
+            {/* コメント表示 */}
+            <CardContent className="mt-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">コメント</h3>
+                {loadingComments ? (
+                    <div className="space-y-4">
+                        {Array.from({ length: 2 }).map((_, i) => (
+                            <div key={i} className="flex items-start space-x-4">
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                                <div className="flex-1">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <Skeleton className="h-4 w-24" />
+                                            <Skeleton className="h-4 w-full mt-2" />
+                                            <Skeleton className="h-3 w-1/4 mt-2" />
+                                        </div>
+                                        <Skeleton className="h-5 w-5" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : errorComments ? (
+                    <div className="text-red-500">{errorComments}</div>
+                ) : comments.length > 0 ? (
+                    <ul className="space-y-4">
+                        {comments.map((comment) => (
+                            <li key={comment.id} className="bg-gray-100 rounded-md p-4">
+                                <div className="flex items-start space-x-4">
+                                    <Avatar>
+                                        {comment.user_icon_url ? (
+                                            <AvatarImage
+                                                src={comment.user_icon_url}
+                                                alt={`${comment.display_name || comment.user?.username || '不明'}のアイコン`}
+                                                onError={(e) => {
+                                                    console.error('Failed to load user icon:', comment.user?.user_icon_url);
+                                                    (e.target as HTMLImageElement).onerror = null;
+                                                    (e.target as HTMLImageElement).src = '';
+                                                }}
+                                            />
+                                        ) : (
+                                            <AvatarFallback className="text-gray-400">
+                                                <UserCircleIcon className="h-8 w-8" />
+                                            </AvatarFallback>
+                                        )}
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Link href={`/users/${comment.user_id}/profile`} className="hover:text-blue-500 transition-colors">
+                                                        <p className="text-sm font-semibold text-gray-800">
+                                                            {comment.user?.display_name || comment.user?.username || '不明'}
+                                                        </p>
+                                                    </Link>
+                                                </div>
+                                                <p className="text-gray-700 text-sm whitespace-pre-line">{comment.content}</p>
+                                                <p className="text-gray-500 text-xs mt-1">{new Date(comment.created_at).toLocaleDateString()}</p>
+                                            </div>
                                             {currentUserId === comment.user?.id && (
-                                                <button
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     onClick={() => handleDeleteComment(comment.id)}
                                                     className="text-red-500 hover:text-red-700 focus:outline-none"
+                                                    aria-label="コメントを削除"
                                                 >
                                                     <TrashIcon className="h-5 w-5" />
-                                                    削除
-                                                </button>
+                                                </Button>
                                             )}
-
                                         </div>
                                     </div>
                                 </div>
@@ -326,25 +413,26 @@ export default function DetailPage({ params }: { params: { id: string } }) {
                 ) : (
                     <div className="text-gray-500">まだコメントはありません。</div>
                 )}
-            </div>
+            </CardContent>
 
             {/* コメント入力フォーム */}
-            <div className="mt-4">
+            <CardContent className="mt-4">
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">コメントする</h3>
-                <textarea
+                <Textarea
                     value={commentInput}
                     onChange={handleCommentInputChange}
                     rows={3}
                     className="w-full border rounded-md p-2 text-gray-700 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="コメントを入力してください..."
+                    aria-label="コメント入力欄"
                 />
-                <button
+                <Button
                     onClick={handleSubmitComment}
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md mt-2 focus:outline-none focus:shadow-outline"
                 >
                     送信
-                </button>
-            </div>
-        </div>
+                </Button>
+            </CardContent>
+        </Card>
     );
 }
