@@ -1,4 +1,3 @@
-// src/app/components/posts/LikedPostsList.tsx
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -13,7 +12,9 @@ import {
 } from '@heroicons/react/24/outline';
 import LikeButton from './LikeButton';
 import { Post } from '@/app/utils/types';
-import Image from 'next/image'; // Image コンポーネントをインポート
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface LikedPostsListProps {
     userId: number; // 特定のユーザーがいいねした投稿をフェッチするために使用
@@ -61,7 +62,7 @@ const LikedPostsList: React.FC<LikedPostsListProps> = ({ userId }) => {
         fetchLikedPosts();
     }, [fetchLikedPosts]);
 
-    const handleLikeChange = (postId: number, liked: boolean) => {
+      const handleLikeChange = (postId: number, liked: boolean) => {
         setLikedPosts((prevPosts) =>
             prevPosts.map((post) =>
                 post.id === postId
@@ -80,63 +81,65 @@ const LikedPostsList: React.FC<LikedPostsListProps> = ({ userId }) => {
     }
 
     return (
-        <ul className="space-y-4">
+        <div className="space-y-6">
             {likedPosts.map((post) => (
-                <li key={post.id} className="bg-white shadow-md rounded-md p-4 hover:shadow-lg transition duration-300">
-                    <div className="flex items-start space-x-3">
-                        <div className="flex items-center flex-shrink-0">
-                            {post.user_icon_url? (
+                <Card key={post.id} className="transition-shadow hover:shadow-lg border-0">
+                    <CardHeader>
+                        <div className="flex items-center space-x-4">
+                            {post.user_icon_url ? (
                                 <img
                                     src={post.user_icon_url}
-                                    alt={`${post.user?.display_name || post.user?.username || '不明'}のアイコン`}
-                                    width={32}
-                                    height={32}
-                                    className="rounded-full mr-2"
+                                    alt={`${post.user?.display_name || post.user?.username || '不明'}さんのアイコン`}
+                                    width={40}
+                                    height={40}
+                                    className="rounded-full"
                                 />
                             ) : (
-                                <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
+                                <UserCircleIcon className="h-10 w-10 rounded-full text-gray-400" />
                             )}
-                            <span className="text-sm font-semibold text-gray-800">
-                                {post.user?.display_name || post.user?.username || '不明'}
-                            </span>
-                        </div>
-                        <br />
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-semibold text-gray-700 mb-1">
-                                    <Link href={`/posts/${post.id}`} className="hover:text-blue-500 transition duration-200">
-                                        {post.content?.length > 70 ? post.content.substring(0, 70) + '...' : post.content}
-                                    </Link>
-                                </h2>
-                                <p className="text-sm text-gray-500">
+                            <div>
+                                <CardTitle className="text-lg font-semibold">
+                                    {post.user?.display_name || post.user?.username || '不明'}
+                                </CardTitle>
+                                <CardDescription className="text-sm text-gray-500">
                                     {new Date(post.created_at).toLocaleDateString()}
-                                </p>
-                            </div>
-
-                            <div className="flex justify-between text-gray-500 text-sm mt-2">
-                                <button className="flex items-center space-x-1 hover:text-blue-500 focus:outline-none">
-                                    <ChatBubbleLeftIcon className="h-5 w-5" />
-                                    <span className="text-gray-600 text-sm">{post.comments_count || 0}</span>
-                                </button>
-                                <button className="flex items-center space-x-1 hover:text-green-500 focus:outline-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046-.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
-                                    </svg>
-                                    4
-                                </button>
-                                <div className="flex items-center space-x-1">
-                                    <LikeButton postId={post.id} isLiked={post.is_liked_by_current_user || false} onLikeChange={handleLikeChange} />
-                                    <span className="text-gray-600 text-sm">{post.likes_count || 0}</span>
-                                </div>
-                                <button className="hover:text-gray-700 focus:outline-none">
-                                    <EllipsisHorizontalIcon className="h-5 w-5" />
-                                </button>
+                                </CardDescription>
                             </div>
                         </div>
-                    </div>
-                </li>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            <p className="text-gray-700 leading-relaxed">
+                                <Link href={`/posts/${post.id}`} className="hover:text-blue-500 transition-colors">
+                                    {post.content?.length > 70 ? post.content.substring(0, 70) + '...' : post.content}
+                                </Link>
+                            </p>
+                            <div className="flex justify-between items-center text-gray-500 text-sm">
+                                <div className="flex space-x-4">
+                                    <Button variant="ghost" size="sm" className="hover:text-blue-500">
+                                        <ChatBubbleLeftIcon className="h-5 w-5 mr-1" />
+                                        <span>{post.comments_count || 0}</span>
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="hover:text-green-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6 mr-1">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046-.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
+                                        </svg>
+                                        4
+                                    </Button>
+                                     <div className="flex items-center">
+                                        <LikeButton postId={post.id} isLiked={post.is_liked_by_current_user || false} onLikeChange={handleLikeChange} />
+                                        <span className="text-gray-600 text-sm ml-1">{post.likes_count || 0}</span>
+                                    </div>
+                                </div>
+                                <Button variant="ghost" size="icon" className="hover:text-gray-700">
+                                    <EllipsisHorizontalIcon className="h-5 w-5" />
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
             ))}
-        </ul>
+        </div>
     );
 };
 
