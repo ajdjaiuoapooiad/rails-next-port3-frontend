@@ -30,8 +30,15 @@ interface UserProfile {
     user_icon_url?: string;
     bg_image_url?: string;
     is_following?: boolean;
-}
+    display_name?: string | null;
+    followers_count?: number; // APIレスポンスに含まれると仮定
+    following_count?: number; // APIレスポンスに含まれると仮定
+    created_at: string;
+    updated_at: string;
+  }
 
+
+  
 const UserProfilePage: React.FC = () => {
     const params = useParams();
     const { id: paramId } = params;
@@ -340,7 +347,7 @@ const UserProfilePage: React.FC = () => {
 
                         {/* ユーザー情報 */}
                         <div className="mt-6 ml-32 text-left">
-                            <CardTitle className="text-xl">{userProfile.username}</CardTitle>
+                            <CardTitle className="text-xl">{userProfile.display_name}</CardTitle>
                             <CardDescription className="text-gray-600 text-sm">{userProfile.email}</CardDescription>
                             {userProfile.bio && (
                                 <p className="text-gray-700 mt-2 text-sm whitespace-pre-wrap">
