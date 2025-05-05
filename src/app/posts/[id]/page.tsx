@@ -238,7 +238,7 @@ export default function DetailPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      <p className="text-gray-700 leading-relaxed mb-4">{post.content}</p>
+      <p className="text-gray-700 leading-relaxed mb-4" style={{ whiteSpace: 'pre-wrap' }}>{post.content}</p>
       <div className="flex justify-between text-gray-500 text-sm mt-2">
         <button className="flex items-center space-x-1 hover:text-blue-500 focus:outline-none">
           <ChatBubbleLeftIcon className="h-5 w-5" />

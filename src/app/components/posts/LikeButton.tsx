@@ -1,7 +1,7 @@
 // components/LikeButton.tsx
 import React, { useState, useEffect } from 'react';
 import { HeartIcon } from '@heroicons/react/24/solid'; // 例
-import HeartFillIcon from './HeartFillIcon';
+import HeartFillIcon from './icons/HeartFillIcon';
 
 interface LikeButtonProps {
   postId: number;
