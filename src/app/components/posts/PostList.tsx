@@ -18,6 +18,7 @@ import { Post } from '@/app/utils/types';
 import LikeButton from './LikeButton';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Skeleton } from "@/components/ui/skeleton"
 
 const PostList: React.FC = () => {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -69,10 +70,41 @@ const PostList: React.FC = () => {
     };
 
     if (loading) {
+        // スケルトン表示
         return (
-            <div className="flex justify-center items-center py-8">
-                <Loader2 className="animate-spin h-6 w-6 text-gray-500" />
-                <span className="ml-2 text-gray-500">読み込み中...</span>
+            <div className="space-y-6">
+                {[...Array(3)].map((_, i) => ( // 3つのスケルトンカードを表示
+                    <Card key={i} className="bg-white shadow-md border border-gray-100">
+                        <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                            <Skeleton className="h-9 w-9 rounded-full" />
+                            <div className="ml-3 space-y-1">
+                                <Skeleton className="h-4 w-20" />
+                                <Skeleton className="h-3 w-12" />
+                            </div>
+                            <div className="ml-auto">
+                                <Skeleton className="h-3 w-16" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <Skeleton className="h-6 w-full mb-2" />
+                            <Skeleton className="h-6 w-3/4" />
+                            <div className="mt-2">
+                                <Skeleton className="h-32 w-full rounded-md" />
+                            </div>
+                        </CardContent>
+                        <CardFooter className="flex justify-between text-gray-500 text-sm">
+                            <div className="flex items-center space-x-4">
+                                <Skeleton className="h-5 w-5" />
+                                <Skeleton className="h-4 w-12" />
+                                <Skeleton className="h-5 w-5" />
+                                <Skeleton className="h-4 w-12" />
+                                <Skeleton className="h-5 w-5" />
+                                <Skeleton className="h-4 w-12" />
+                            </div>
+                            <Skeleton className="h-5 w-5" />
+                        </CardFooter>
+                    </Card>
+                ))}
             </div>
         );
     }
