@@ -12,39 +12,10 @@ import {
 } from '@heroicons/react/24/outline';
 import LikeButton from './LikeButton';
 import Image from 'next/image';
+import { Post } from '@/app/utils/types';
 
-interface Post {
-  id: number;
-  user_id: number;
-  content: string;
-  post_type: string | null;
-  media_url: string | null;
-  created_at: string;
-  updated_at: string;
-  user?: {
-    id: number;
-    email: string;
-    password_digest: string;
-    username: string;
-    display_name: string | null;
-    avatar: string | null;
-    created_at: string;
-    updated_at: string;
-    profile?: {
-      id: number;
-      user_id: number;
-      bio: string | null;
-      location: string | null;
-      website: string | null;
-      display_name: string | null;
-      created_at: string;
-      updated_at: string;
-    };
-  };
-  likes_count?: number;
-  is_liked_by_current_user?: boolean;
-  user_icon_url?: string;
-}
+
+
 
 const PostList: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);

@@ -12,20 +12,9 @@ import {
   HeartIcon as HeartSolidIcon,
 } from '@heroicons/react/24/outline';
 import LikeButton from './LikeButton';
+import { Post } from '@/app/utils/types';
 
-interface Post {
-  id: number;
-  content: string;
-  created_at: string;
-  user?: {
-    id?: number;
-    username?: string;
-    user_icon_url?: string;
-  };
-  likes_count?: number;
-  is_liked_by_current_user?: boolean;
-  // 他に必要なプロパティ
-}
+
 
 interface LikedPostsListProps {
   userId: number; // 特定のユーザーがいいねした投稿をフェッチするために使用

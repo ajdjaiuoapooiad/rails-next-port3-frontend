@@ -33,17 +33,34 @@ export interface UserProfile {
 }
 export interface Post {
     id: number;
-    user_id: number; // 追加
+    user_id: number;
     content: string;
+    post_type: string | null;
+    media_url: string | null;
     created_at: string;
-    updated_at?: string;
+    updated_at: string;
     user?: {
       id: number;
-      username?: string;
-      user_icon_url?: string;
+      email: string;
+      password_digest: string;
+      username: string;
+      display_name: string | null;
+      avatar: string | null;
+      created_at: string;
+      updated_at: string;
+      profile?: {
+        id: number;
+        user_id: number;
+        bio: string | null;
+        location: string | null;
+        website: string | null;
+        display_name: string | null;
+        created_at: string;
+        updated_at: string;
+      };
     };
     likes_count?: number;
     is_liked_by_current_user?: boolean;
-    image_url?: string | null;
-    video_url?: string | null;
+    user_icon_url?: string;
   }
+  
