@@ -116,9 +116,11 @@ const PostList: React.FC = () => {
               ) : (
                 <UserCircleIcon className="h-12 w-12 rounded-full text-gray-400 mr-2" />
               )}
-              <span className="text-sm font-semibold text-gray-800">
-                {post.user?.display_name || post.user?.username || '不明'}
-              </span>
+              <Link href={`/users/${post.user_id}/profile`} className="flex flex-col">
+                <span className="text-sm font-semibold text-gray-800">
+                  {post.user?.display_name || post.user?.username || '不明'}
+                </span>
+              </Link>
             </div>
             <br />
 

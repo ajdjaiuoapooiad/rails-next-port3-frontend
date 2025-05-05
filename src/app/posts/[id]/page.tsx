@@ -15,6 +15,7 @@ import LikeButton from '@/app/components/posts/LikeButton';
 
 interface Post {
   id: number;
+  user_id: number;
   content: string;
   created_at: string;
   user?: {
@@ -248,9 +249,11 @@ export default function DetailPage({ params }: { params: { id: string } }) {
           ) : (
             <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
           )}
-          <span className="text-sm font-semibold text-gray-800">
-            {post.user?.display_name || post.user?.username || '不明'}
-          </span>
+          <Link href={`/users/${post.user_id}/profile`} className="flex flex-col ">
+            <span className="text-sm font-semibold text-gray-800">
+              {post.user?.display_name || post.user?.username || '不明'}
+            </span>
+          </Link>
         </div>
       </div>
 
