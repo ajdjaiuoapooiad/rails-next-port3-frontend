@@ -2,23 +2,31 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { UserCircleIcon } from '@heroicons/react/24/solid';
-import PostList from '@/app/components/posts/PostList';
-import Link from 'next/link';
-import CurrentUserPostList from '@/app/components/posts/CurrentUserPostList';
-import LikedPostsList from '@/app/components/posts/LikedPostsList';
+import {
+    User,
+    Loader2,
+    AlertTriangle,
+    Users,
+    Heart,
+    FileText,
+    Link as LinkIcon
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
+//import PostList from '@/app/components/posts/PostList'; // 独自のPostListコンポーネントは一旦コメントアウト
+import CurrentUserPostList from '@/app/components/posts/CurrentUserPostList';
+import LikedPostsList from '@/app/components/posts/LikedPostsList';
+
 
 interface UserProfile {
     id: number;
@@ -31,14 +39,14 @@ interface UserProfile {
     bg_image_url?: string;
     is_following?: boolean;
     display_name?: string | null;
-    followers_count?: number; // APIレスポンスに含まれると仮定
-    following_count?: number; // APIレスポンスに含まれると仮定
+    followers_count?: number;
+    following_count?: number;
     created_at: string;
     updated_at: string;
-  }
+}
 
 
-  
+
 const UserProfilePage: React.FC = () => {
     const params = useParams();
     const { id: paramId } = params;
@@ -174,18 +182,18 @@ const UserProfilePage: React.FC = () => {
         if (!userProfile?.id) return;
         setIsCreatingConversation(true);
         setConversationError(null);
-    
+
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL;
             const token = localStorage.getItem('authToken');
             const loggedInUserId = localStorage.getItem('userId');
-    
+
             if (!apiUrl || !token || !loggedInUserId) {
                 console.error('API URL、トークン、またはユーザーIDがありません');
                 setConversationError('認証エラーが発生しました。');
                 return;
             }
-    
+
             // 既存の会話を検索
             const existingConversationResponse = await fetch(`${apiUrl}/conversations?user_id=${userProfile.id}`, {
                 method: 'GET',
@@ -194,16 +202,16 @@ const UserProfilePage: React.FC = () => {
                     'Authorization': `Bearer ${token}`,
                 },
             });
-    
+
             if (!existingConversationResponse.ok) {
                 const errorData = await existingConversationResponse.json();
                 console.error('既存の会話検索エラー:', errorData);
                 setConversationError(errorData?.error || 'メッセージの送信に失敗しました。');
                 return;
             }
-    
+
             const existingConversations = await existingConversationResponse.json();
-    
+
             if (existingConversations.length !== 0) { // 修正：配列の長さを確認
                 // 既存の会話があればそちらにリダイレクト
                 const conversationId = existingConversations.id; // 最初の会話にリダイレクト
@@ -218,19 +226,19 @@ const UserProfilePage: React.FC = () => {
                     },
                     body: JSON.stringify({ recipient_id: userProfile.id }),
                 });
-    
+
                 if (!conversationResponse.ok) {
                     const errorData = await conversationResponse.json();
                     console.error('会話作成エラー:', errorData);
                     setConversationError(errorData?.error || 'メッセージの送信に失敗しました。');
                     return;
                 }
-    
+
                 const conversationData = await conversationResponse.json();
                 const conversationId = conversationData.id;
                 router.push(`/messages/${conversationId}`);
             }
-    
+
         } catch (error) {
             console.error('メッセージ送信処理中にエラーが発生しました:', error);
             setConversationError('メッセージの送信中にエラーが発生しました。');
@@ -238,7 +246,7 @@ const UserProfilePage: React.FC = () => {
             setIsCreatingConversation(false);
         }
     };
-    
+
 
 
     if (loading) {
@@ -247,10 +255,12 @@ const UserProfilePage: React.FC = () => {
                 <div className="max-w-3xl mx-auto">
                     <Card>
                         <CardHeader>
-                            <Skeleton className="h-24 w-24 rounded-full" />
-                            <div className="mt-4">
-                                <Skeleton className="h-6 w-1/2" />
-                                <Skeleton className="h-4 w-1/3 mt-2" />
+                            <div className="flex items-center space-x-4">
+                                <Skeleton className="h-24 w-24 rounded-full" />
+                                <div>
+                                    <Skeleton className="h-6 w-1/2" />
+                                    <Skeleton className="h-4 w-1/3 mt-2" />
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -260,12 +270,12 @@ const UserProfilePage: React.FC = () => {
                                     <Skeleton className="h-8 w-full" />
                                     <Skeleton className="h-8 w-full" />
                                 </TabsList>
+                                <div className="mt-4">
+                                    <Skeleton className="h-8 w-full" />
+                                    <Skeleton className="h-8 w-full mt-2" />
+                                    <Skeleton className="h-8 w-full mt-2" />
+                                </div>
                             </Tabs>
-                            <div className="mt-4">
-                                <Skeleton className="h-8 w-full" />
-                                <Skeleton className="h-8 w-full mt-2" />
-                                <Skeleton className="h-8 w-full mt-2" />
-                            </div>
                         </CardContent>
                     </Card>
                 </div>
@@ -322,53 +332,67 @@ const UserProfilePage: React.FC = () => {
                                 style={{ layout: 'fill', objectFit: 'cover' }}
                             />
                         )}
-                        <div className="absolute inset-0 bg-black opacity-20"></div>
+                        <div className="absolute inset-0 bg-black/20"></div>
                     </div>
 
                     <CardHeader className="relative">
                         {/* アバター */}
                         <div className="-mt-16 absolute left-4">
-                            {userProfile.user_icon_url ? (
-                                <img
-                                    src={userProfile.user_icon_url}
-                                    alt="プロフィールアイコン"
-                                    className="h-24 w-24 rounded-full border-4 border-white bg-gray-300 shadow-md object-cover"
-                                />
-                            ) : (
-                                <img
-                                    src={process.env.NEXT_PUBLIC_DEFAULT_USER_ICON_URL}
-                                    alt="デフォルトのプロフィールアイコン"
-                                    className="h-24 w-24 rounded-full border-4 border-white bg-gray-300 shadow-md object-cover"
-                                    width={96}
-                                    height={96}
-                                />
-                            )}
+                            <Avatar className="h-24 w-24 border-4 border-white shadow-md">
+                                {userProfile.user_icon_url ? (
+                                    <AvatarImage
+                                        src={userProfile.user_icon_url}
+                                        alt={`${userProfile.display_name || userProfile.username || '不明'}のプロフィールアイコン`}
+                                        className="object-cover"
+                                    />
+                                ) : (
+                                    <AvatarFallback>
+                                        <User className="h-12 w-12 text-gray-400" />
+                                    </AvatarFallback>
+                                )}
+                            </Avatar>
                         </div>
 
                         {/* ユーザー情報 */}
-                        <div className="mt-6 ml-32 text-left">
-                            <CardTitle className="text-xl">{userProfile.display_name}</CardTitle>
+                        <div className="mt-6 ml-32 text-left space-y-1.5">
+                            <CardTitle className="text-2xl font-bold text-gray-900">{userProfile.display_name || userProfile.username}</CardTitle>
                             <CardDescription className="text-gray-600 text-sm">{userProfile.email}</CardDescription>
-                            <div className="flex mt-2 space-x-4">
-                                <span className="text-gray-700 text-sm"><span className="font-bold">10</span> フォロー</span>
-                                <span className="text-gray-700 text-sm"><span className="font-bold">0</span> フォロワー</span>
+                            <div className="flex items-center space-x-4">
+                                <span className="text-gray-700 text-sm">
+                                    <span className="font-semibold">{userProfile.following_count || 0}</span> フォロー
+                                </span>
+                                <span className="text-gray-700 text-sm">
+                                    <span className="font-semibold">{userProfile.followers_count || 0}</span> フォロワー
+                                </span>
                             </div>
                             {userProfile.bio && (
-                                <p className="text-gray-700 mt-2 text-sm whitespace-pre-wrap">
+                                <p className="text-gray-700 text-sm whitespace-pre-wrap">
                                     {userProfile.bio}
                                 </p>
                             )}
-                            {userProfile.location && <p className="text-gray-700 mt-1 text-sm"><span className='font-bold'>場所:</span> {userProfile.location}</p>}
+                            {userProfile.location && (
+                                <p className="text-gray-700 text-sm">
+                                    <span className='font-semibold'>場所:</span> {userProfile.location}
+                                </p>
+                            )}
                             {userProfile.website && (
-                                <p className="text-gray-700 mt-1 text-sm">
-                                    <span className='font-bold'>ウェブサイト:</span> <a href={userProfile.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{userProfile.website}</a>
+                                <p className="text-gray-700 text-sm flex items-center">
+                                    <LinkIcon className="w-4 h-4 mr-1" />
+                                    <a
+                                        href={userProfile.website}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-500 hover:underline"
+                                    >
+                                        {userProfile.website}
+                                    </a>
                                 </p>
                             )}
                         </div>
 
 
                         {/* アクションボタン */}
-                        <div className="mt-4 flex justify-around space-x-2">
+                        <div className="mt-6 flex justify-around space-x-2">
                             {!isCurrentUserProfile && (
                                 <>
                                     {userProfile.is_following ? (
@@ -405,33 +429,28 @@ const UserProfilePage: React.FC = () => {
                                 </Button>
                             )}
                         </div>
-
                         {followError && <p className="mt-2 text-red-500 text-sm">{followError}</p>}
                         {conversationError && <p className="mt-2 text-red-500 text-sm">{conversationError}</p>}
                     </CardHeader>
 
                     <CardContent>
                         {/* ナビゲーションバー */}
-                        <Tabs defaultValue="posts" className="w-full" onValueChange={(value) => setActiveTab(value as 'posts' | 'liked' | 'following')}>
+                        <Tabs
+                            defaultValue="posts"
+                            className="w-full"
+                            onValueChange={(value) => setActiveTab(value as 'posts' | 'liked' | 'following')}
+                        >
                             <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="posts">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 mr-1 inline-block">
-                                        <path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 0 1-.814 1.686.75.75 0 0 0 .44 1.223ZM8.25 10.875a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25ZM10.875 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875-1.125a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clipRule="evenodd" />
-                                    </svg>
+                                <TabsTrigger value="posts" className="data-[state=active]:text-blue-500">
+                                    <FileText className="h-4 w-4 mr-1 inline-block" />
                                     自分の投稿
                                 </TabsTrigger>
-                                <TabsTrigger value="liked">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 mr-1 inline-block">
-                                        <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
-                                    </svg>
+                                <TabsTrigger value="liked" className="data-[state=active]:text-red-500">
+                                    <Heart className="h-4 w-4 mr-1 inline-block" />
                                     いいね
                                 </TabsTrigger>
-                                <TabsTrigger value="following">
-                                    {/* フォローアイコン */}
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 mr-1 inline-block">
-                                        <path d="M8 9a3 3 0 1 0 0-6 0 3 3 0 0 0 0 6ZM8 11a3 3 0 0 1 3 3v1a1 1 0 1 1-2 0v-1a1 1 0 0 0-1-1 1 1 0 0 0-1 1v.2a2.5 2.5 0 0 1-2.5 2.5H4.5a2.5 2.5 0 0 1-2.5-2.5V13a3 3 0 0 1 3-3h4Z" />
-                                        <path d="M13.5 5a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM13 7a3 3 0 0 0 3 3v1a1 1 0 1 1-2 0v-1a1 1 0 0 0-1-1h-.2a2.5 2.5 0 0 1-2.5 2.5H15a2.5 2.5 0 0 1-2.5-2.5V10a3 3 0 0 0 3-3h.5Z" />
-                                    </svg>
+                                <TabsTrigger value="following" className="data-[state=active]:text-green-500">
+                                    <Users className="h-4 w-4 mr-1 inline-block" />
                                     フォロー
                                 </TabsTrigger>
                             </TabsList>
