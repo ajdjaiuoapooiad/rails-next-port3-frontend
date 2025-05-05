@@ -20,6 +20,7 @@ interface Post {
   user?: {
     username?: string;
     user_icon_url?: string;
+    display_name?: string | null; // 表示名を追加
   };
   likes_count?: number;
   is_liked_by_current_user?: boolean;
@@ -35,6 +36,7 @@ interface Comment {
     id?: number; // コメント投稿者の ID
     username?: string;
     user_icon_url?: string;
+    display_name?: string | null; // 表示名を追加
   };
 }
 
@@ -233,7 +235,7 @@ export default function DetailPage({ params }: { params: { id: string } }) {
         <div className="flex items-center flex-shrink-0">
           <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
           <span className="text-sm font-semibold text-gray-800">
-            {post.user?.username || '不明'}
+            {post.user?.display_name || post.user?.username || '不明'}
           </span>
         </div>
       </div>
@@ -286,19 +288,19 @@ export default function DetailPage({ params }: { params: { id: string } }) {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-gray-800">{comment.user?.username || '不明'}</p>
+                        <p className="text-sm font-semibold text-gray-800">{comment.user?.display_name || comment.user?.username || '不明'}</p>
                         <p className="text-gray-700 text-sm">{comment.content}</p>
                         <p className="text-gray-500 text-xs">{new Date(comment.created_at).toLocaleDateString()}</p>
                       </div>
-                  
-                        <button
-                          onClick={() => handleDeleteComment(comment.id)}
-                          className="text-red-500 hover:text-red-700 focus:outline-none"
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                          削除
-                        </button>
-               
+
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="text-red-500 hover:text-red-700 focus:outline-none"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                        削除
+                      </button>
+
                     </div>
                   </div>
                 </div>
