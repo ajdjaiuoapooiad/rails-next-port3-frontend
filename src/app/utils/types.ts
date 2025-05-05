@@ -29,6 +29,7 @@ export interface UserProfile {
     user_icon_url?: string;
     bg_image_url?: string;
     is_following?: boolean;
+    display_name?: string | null; // 表示名を追加 (null許容)
 }
 export interface Post {
     id: number;

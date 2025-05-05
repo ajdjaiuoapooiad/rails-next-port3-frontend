@@ -9,8 +9,6 @@ import NotificationList from './notifications/NotificationList';
 import { userAgent } from 'next/server';
 import { UserProfile, Notification } from '../utils/types';
 
-
-
 interface UserProfileShort {
   id: number;
   username: string;
@@ -148,7 +146,7 @@ const Navbar: React.FC<NavbarProps> = () => {
     fetchNotifications();
   }, []);
 
-  const displayedUsername: string = currentUserProfile?.username ? (currentUserProfile.username.length > 10 ? currentUserProfile.username.slice(0, 10) + '...' : currentUserProfile.username) : '';
+  const displayedUsername: string = currentUserProfile?.display_name || currentUserProfile?.username ? (currentUserProfile.display_name || currentUserProfile.username).length > 10 ? (currentUserProfile.display_name || currentUserProfile.username).slice(0, 10) + '...' : (currentUserProfile.display_name || currentUserProfile.username) : '';
 
   return (
     <nav className="bg-gray-800 p-4">
@@ -168,7 +166,6 @@ const Navbar: React.FC<NavbarProps> = () => {
           </Link>
         </div>
         <div className="relative flex items-center space-x-4">
-
           {currentUserProfile ? (
             <>
               <div
@@ -206,7 +203,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                   </div>
                 )}
               </div>
-              
+
               <Link href="/auth/login" className="text-gray-300 hover:text-white">
                 メッセージ
               </Link>
@@ -216,7 +213,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                     {currentUserProfile.user_icon_url ? (
                       <img
                         src={currentUserProfile.user_icon_url}
-                        alt={`${currentUserProfile.username}のアイコン`}
+                        alt={`${currentUserProfile.display_name || currentUserProfile.username || '不明'}のアイコン`}
                         className="h-8 w-8 rounded-full object-cover"
                         onError={(e) => {
                           console.error('Failed to load user icon:', currentUserProfile.user_icon_url);
