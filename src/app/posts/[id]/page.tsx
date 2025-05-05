@@ -24,6 +24,7 @@ interface Post {
   };
   likes_count?: number;
   is_liked_by_current_user?: boolean;
+  user_icon_url?: string | null; // APIからの user_icon_url を直接使用するため追加
 }
 
 interface Comment {
@@ -233,12 +234,26 @@ export default function DetailPage({ params }: { params: { id: string } }) {
       {/* 投稿の詳細表示 (省略) */}
       <div className="flex items-start space-x-3 mb-4">
         <div className="flex items-center flex-shrink-0">
-          <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
+          {post?.user_icon_url ? (
+            <img
+              src={post.user_icon_url}
+              alt={`${post.user?.display_name || post.user?.username || '不明'}のアイコン`}
+              className="h-8 w-8 rounded-full object-cover mr-2"
+              onError={(e) => {
+                console.error('Failed to load user icon:', post.user?.user_icon_url);
+                (e.target as HTMLImageElement).onerror = null;
+                (e.target as HTMLImageElement).src = '';
+              }}
+            />
+          ) : (
+            <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
+          )}
           <span className="text-sm font-semibold text-gray-800">
             {post.user?.display_name || post.user?.username || '不明'}
           </span>
         </div>
       </div>
+
 
       <p className="text-gray-700 leading-relaxed mb-4" style={{ whiteSpace: 'pre-wrap' }}>{post.content}</p>
       <div className="flex justify-between text-gray-500 text-sm mt-2">
@@ -284,7 +299,20 @@ export default function DetailPage({ params }: { params: { id: string } }) {
             {comments.map((comment) => (
               <li key={comment.id} className="bg-gray-100 rounded-md p-3 mb-2">
                 <div className="flex items-start space-x-2">
-                  <UserCircleIcon className="h-6 w-6 rounded-full text-gray-400 flex-shrink-0" />
+                  {comment.user?.user_icon_url ? (
+                    <img
+                      src={comment.user.user_icon_url}
+                      alt={`${comment.user.display_name || comment.user.username || '不明'}のアイコン`}
+                      className="h-6 w-6 rounded-full object-cover flex-shrink-0"
+                      onError={(e) => {
+                        console.error('Failed to load user icon:', comment.user?.user_icon_url);
+                        (e.target as HTMLImageElement).onerror = null;
+                        (e.target as HTMLImageElement).src = '';
+                      }}
+                    />
+                  ) : (
+                    <UserCircleIcon className="h-6 w-6 rounded-full text-gray-400 flex-shrink-0" />
+                  )}
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div>
