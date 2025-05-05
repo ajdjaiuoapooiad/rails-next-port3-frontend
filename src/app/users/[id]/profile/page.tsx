@@ -180,7 +180,7 @@ const UserProfilePage: React.FC = () => {
             }
 
             // 既存の会話を検索
-            const existingConversationResponse = await fetch(`${apiUrl}/conversations?recipient_id=${userProfile.id}`, {
+            const existingConversationResponse = await fetch(`${apiUrl}/conversations?user_id=${userProfile.id}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
