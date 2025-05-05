@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface PostListProps {
     userId?: number;
@@ -132,7 +133,33 @@ const CurrentUserPostList: React.FC<PostListProps> = ({ userId }) => {
     }, [openDropdownId]);
 
     if (loading) {
-        return <div className="text-center py-4">読み込み中...</div>;
+         return (
+            <div className="space-y-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <Card key={i} className="border-0">
+                        <CardHeader>
+                            <div className="flex items-center space-x-4">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div>
+                                    <Skeleton className="h-6 w-32" />
+                                    <Skeleton className="h-4 w-20 mt-1" />
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                <Skeleton className="h-5 w-full" />
+                                <Skeleton className="h-5 w-3/4" />
+                                <div className="flex justify-between items-center">
+                                    <Skeleton className="h-5 w-20" />
+                                    <Skeleton className="h-5 w-20" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        );
     }
 
     if (error) {
@@ -146,7 +173,7 @@ const CurrentUserPostList: React.FC<PostListProps> = ({ userId }) => {
                     <CardHeader>
                         <div className="flex items-center space-x-4">
                             {post.user_icon_url ? (
-                                <img
+                                 <img
                                     src={post.user_icon_url}
                                     alt={`${post.user?.display_name || post.user?.username || '不明'}さんのアイコン`}
                                     width={40}
