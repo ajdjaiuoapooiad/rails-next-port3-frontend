@@ -67,7 +67,7 @@ const PostList: React.FC = () => {
         setError(errorMessage);
         return;
       }
-      const data: Post[] = await res.json(); // 型アサーション
+      const data: Post[] = await res.json();
       setPosts(data);
     } catch (err: any) {
       console.error('Error fetching posts:', err);
@@ -105,16 +105,16 @@ const PostList: React.FC = () => {
         <li key={post.id} className="bg-white shadow-md rounded-md p-4 hover:shadow-lg transition duration-300">
           <div className="flex items-start space-x-3">
             <div className="flex items-center flex-shrink-0 ">
-              {post?.user_icon_url ? (
+              {post.user_icon_url ? (
                 <img
                   src={post.user_icon_url}
                   alt={`${post.user?.username || '不明'}のアイコン`}
-                  width={32}
-                  height={32}
+                  width={38} // サイズを大きくしました
+                  height={38} // サイズを大きくしました
                   className="rounded-full mr-2"
                 />
               ) : (
-                <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
+                <UserCircleIcon className="h-12 w-12 rounded-full text-gray-400 mr-2" /> 
               )}
               <span className="text-sm font-semibold text-gray-800">
                 {post.user?.username || '不明'}
@@ -122,6 +122,7 @@ const PostList: React.FC = () => {
             </div>
             <br />
 
+            {/* その他の投稿内容 */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-700 mb-1">
