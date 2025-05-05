@@ -110,7 +110,7 @@ const PostList: React.FC = () => {
               <div className="flex justify-between text-gray-500 text-sm mt-2">
                 <button className="flex items-center space-x-1 hover:text-blue-500 focus:outline-none">
                   <ChatBubbleLeftIcon className="h-5 w-5" />
-                  <span className="text-gray-600 text-sm">{post.likes_count || 0}</span>
+                  <span className="text-gray-600 text-sm">{post.comments_count || 0}</span>
                 </button>
                 <button className="flex items-center space-x-1 hover:text-green-500 focus:outline-none">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">

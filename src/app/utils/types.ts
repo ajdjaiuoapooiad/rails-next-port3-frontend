@@ -62,6 +62,7 @@ export interface Post {
     likes_count?: number;
     is_liked_by_current_user?: boolean;
     user_icon_url?: string;
+    comments_count?: number; // 追加: コメント数を追加
   }
   
 
