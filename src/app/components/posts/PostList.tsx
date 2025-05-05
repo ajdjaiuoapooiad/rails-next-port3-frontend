@@ -108,16 +108,16 @@ const PostList: React.FC = () => {
               {post.user_icon_url ? (
                 <img
                   src={post.user_icon_url}
-                  alt={`${post.user?.username || '不明'}のアイコン`}
-                  width={38} // サイズを大きくしました
-                  height={38} // サイズを大きくしました
+                  alt={`${post.user?.display_name || post.user?.username || '不明'}のアイコン`}
+                  width={38}
+                  height={38}
                   className="rounded-full mr-2"
                 />
               ) : (
-                <UserCircleIcon className="h-12 w-12 rounded-full text-gray-400 mr-2" /> 
+                <UserCircleIcon className="h-12 w-12 rounded-full text-gray-400 mr-2" />
               )}
               <span className="text-sm font-semibold text-gray-800">
-                {post.user?.username || '不明'}
+                {post.user?.display_name || post.user?.username || '不明'}
               </span>
             </div>
             <br />
