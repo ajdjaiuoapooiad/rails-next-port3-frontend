@@ -249,8 +249,8 @@ export default function DetailPage({ params }: { params: { id: string } }) {
           ) : (
             <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
           )}
-          <Link href={`/users/${post.user_id}/profile`} className="flex flex-col ">
-            <span className="text-sm font-semibold text-gray-800">
+          <Link href={`/users/${post.user_id}/profile`} >
+            <span className="text-sm font-semibold text-gray-800 hover:text-blue-500 transition duration-200">
               {post.user?.display_name || post.user?.username || '不明'}
             </span>
           </Link>
