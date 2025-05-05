@@ -349,6 +349,10 @@ const UserProfilePage: React.FC = () => {
                         <div className="mt-6 ml-32 text-left">
                             <CardTitle className="text-xl">{userProfile.display_name}</CardTitle>
                             <CardDescription className="text-gray-600 text-sm">{userProfile.email}</CardDescription>
+                            <div className="flex mt-2 space-x-4">
+                                <span className="text-gray-700 text-sm"><span className="font-bold">10</span> フォロー</span>
+                                <span className="text-gray-700 text-sm"><span className="font-bold">0</span> フォロワー</span>
+                            </div>
                             {userProfile.bio && (
                                 <p className="text-gray-700 mt-2 text-sm whitespace-pre-wrap">
                                     {userProfile.bio}
