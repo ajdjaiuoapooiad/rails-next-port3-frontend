@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+
 import {
     ChatBubbleLeftIcon,
     HeartIcon as HeartOutlineIcon,
@@ -12,9 +12,12 @@ import {
 } from '@heroicons/react/24/outline';
 import LikeButton from './LikeButton';
 import { Post } from '@/app/utils/types';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Skeleton } from "@/components/ui/skeleton"
+import Link from 'next/link';
 
 interface LikedPostsListProps {
     userId: number; // 特定のユーザーがいいねした投稿をフェッチするために使用
@@ -62,7 +65,7 @@ const LikedPostsList: React.FC<LikedPostsListProps> = ({ userId }) => {
         fetchLikedPosts();
     }, [fetchLikedPosts]);
 
-      const handleLikeChange = (postId: number, liked: boolean) => {
+    const handleLikeChange = (postId: number, liked: boolean) => {
         setLikedPosts((prevPosts) =>
             prevPosts.map((post) =>
                 post.id === postId
@@ -73,7 +76,33 @@ const LikedPostsList: React.FC<LikedPostsListProps> = ({ userId }) => {
     };
 
     if (loading) {
-        return <div className="text-center py-4">いいねした投稿を読み込み中...</div>;
+        return (
+            <div className="space-y-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <Card key={i} className="border-0">
+                        <CardHeader>
+                            <div className="flex items-center space-x-4">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div>
+                                    <Skeleton className="h-6 w-32" />
+                                    <Skeleton className="h-4 w-20 mt-1" />
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                <Skeleton className="h-5 w-full" />
+                                <Skeleton className="h-5 w-3/4" />
+                                <div className="flex justify-between items-center">
+                                    <Skeleton className="h-5 w-20" />
+                                    <Skeleton className="h-5 w-20" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        );
     }
 
     if (error) {
@@ -115,7 +144,7 @@ const LikedPostsList: React.FC<LikedPostsListProps> = ({ userId }) => {
                                 </Link>
                             </p>
                             <div className="flex justify-between items-center text-gray-500 text-sm">
-                                <div className="flex space-x-4">
+                                 <div className="flex space-x-4">
                                     <Button variant="ghost" size="sm" className="hover:text-blue-500">
                                         <ChatBubbleLeftIcon className="h-5 w-5 mr-1" />
                                         <span>{post.comments_count || 0}</span>
@@ -126,7 +155,7 @@ const LikedPostsList: React.FC<LikedPostsListProps> = ({ userId }) => {
                                         </svg>
                                         4
                                     </Button>
-                                     <div className="flex items-center">
+                                    <div className="flex items-center">
                                         <LikeButton postId={post.id} isLiked={post.is_liked_by_current_user || false} onLikeChange={handleLikeChange} />
                                         <span className="text-gray-600 text-sm ml-1">{post.likes_count || 0}</span>
                                     </div>
