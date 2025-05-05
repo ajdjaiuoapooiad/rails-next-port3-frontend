@@ -197,9 +197,9 @@ const UserProfilePage: React.FC = () => {
 
             const existingConversations = await existingConversationResponse.json();
 
-            if (existingConversations.length > 0) {
+            if (existingConversations && existingConversations.length > 0) {
                 // 既存の会話があればそちらにリダイレクト
-                const conversationId = existingConversations[0].id; // 一番古い会話にリダイレクト
+                const conversationId = existingConversations.id; // 最初の会話にリダイレクト
                 router.push(`/messages/${conversationId}`);
             } else {
                 // 新しい会話を作成
@@ -221,27 +221,8 @@ const UserProfilePage: React.FC = () => {
 
                 const conversationData = await conversationResponse.json();
                 const conversationId = conversationData.id;
-
-                // 最初のメッセージを送信 (任意)
-                const initialMessage = `はじめまして、${userProfile.username}さん。`;
-                const messageResponse = await fetch(`${apiUrl}/conversations/${conversationId}/messages`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({ content: initialMessage }),
-                });
-
-                if (!messageResponse.ok) {
-                    const errorData = await messageResponse.json();
-                    console.error('メッセージ送信エラー:', errorData);
-                    setConversationError(errorData?.error || 'メッセージの送信に失敗しました。');
-                }
-
                 router.push(`/messages/${conversationId}`);
             }
-
 
         } catch (error) {
             console.error('メッセージ送信処理中にエラーが発生しました:', error);
