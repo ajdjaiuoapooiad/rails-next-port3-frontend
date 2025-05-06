@@ -137,8 +137,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
   };
 
   return (
-    <Card className="bg-white shadow-md rounded-lg h-48">
-      <CardHeader className="">
+    <Card className="bg-white shadow-md rounded-lg h-56  flex flex-col px-2">
+      <CardHeader className="py-1.5 px-2">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
           <Avatar className="h-6 w-6">
             {user?.user_icon_url ? (
@@ -149,19 +149,19 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
               </AvatarFallback>
             )}
           </Avatar>
-          <div className="text-base text-gray-900 truncate">
+          <div className="text-base text-gray-900 truncate font-normal">
             {user?.display_name || user?.username || '投稿者'}
           </div>
         </CardTitle>
-        <div className="text-xs text-gray-500 pt-1">新しい投稿を作成</div>
+        <div className="text-xs text-gray-500 pt-0.5">新しい投稿を作成</div>
       </CardHeader>
-      <CardContent className="">
-        <form onSubmit={handleSubmit} className="space-y-2">
-          <div>
+      <CardContent className="px-2 pt-0 pb-2 flex-1 flex flex-col">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
+          <div className="flex-grow">
             <Textarea
               id="postContent"
               rows={2}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-500 text-sm"
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-500 text-sm resize-none h-1/2"
               placeholder="今何してる？"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -173,30 +173,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
             </p>
           </div>
 
-          {/* 画像プレビュー */}
-          {imagePreview && (
-            <div className="relative max-h-48 overflow-hidden rounded-md">
-              <img
-                src={imagePreview}
-                alt="投稿プレビュー"
-                className="w-full object-contain"
-                style={{ maxHeight: '12rem' }}
-              />
-              <Button
-                type="button"
-                onClick={handleRemoveImage}
-                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
-                size="icon"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </Button>
-            </div>
-          )}
-
           {/* 画像選択ボタン */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-2">
             <input
               type="file"
               id="imageInput"
@@ -220,12 +198,12 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
             )}
           </div>
 
-          <CardFooter className="justify-end pt-2">
+          <CardFooter className="justify-end  px-0">
             <Button
               type="submit"
               size="sm"
               className={cn(
-                "bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-full transition-colors duration-200 text-sm",
+                "bg-blue-500 hover:bg-blue-600 text-white font-semibold  px-4 rounded-full transition-colors duration-200 text-sm",
                 isSubmitting && "opacity-70 cursor-not-allowed"
               )}
               disabled={isSubmitting}
