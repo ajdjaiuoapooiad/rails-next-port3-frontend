@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
 import { UserCircleIcon,  } from '@heroicons/react/24/solid';
-import { ChevronDownIcon, BellIcon } from '@heroicons/react/20/solid'; // MessageCircle をインポート
+import { ChevronDownIcon, BellIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/20/solid'; // ログアウトアイコンを追加
 import NotificationList from './notifications/NotificationList';
 import { UserProfile, Notification } from '../utils/types';
 import { Skeleton } from "@/components/ui/skeleton"
@@ -317,7 +317,12 @@ const Navbar: React.FC<NavbarProps> = () => {
                       <Link href={`/users/${userId}`} className="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
                         設定
                       </Link>
-                      <button onClick={handleLogout} className="block px-4 py-2 text-red-500 hover:bg-gray-100 transition-colors">
+                      {/* ログアウトボタンの修正 */}
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center px-4 py-2 text-red-500 hover:bg-gray-100 transition-colors w-full text-left focus:outline-none"
+                      >
+                        <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
                         ログアウト
                       </button>
                     </motion.div>
