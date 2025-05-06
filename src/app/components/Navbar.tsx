@@ -3,16 +3,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
-import { UserCircleIcon } from '@heroicons/react/24/solid';
-import { ChevronDownIcon, BellIcon } from '@heroicons/react/20/solid';
+import { UserCircleIcon,  } from '@heroicons/react/24/solid';
+import { ChevronDownIcon, BellIcon } from '@heroicons/react/20/solid'; // MessageCircle をインポート
 import NotificationList from './notifications/NotificationList';
 import { UserProfile, Notification } from '../utils/types';
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton"
 import { motion, AnimatePresence } from 'framer-motion';
 import Swal from 'sweetalert2';
 import { useRouter } from 'next/navigation';
 
 interface NavbarProps {}
+
 
 const Navbar: React.FC<NavbarProps> = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -20,11 +21,14 @@ const Navbar: React.FC<NavbarProps> = () => {
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
+
+  // 通知関連のステート
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [senders, setSenders] = useState<{ [userId: number]: UserProfile }>({});
   const [isNotificationsDropdownOpen, setIsNotificationsDropdownOpen] = useState(false);
   const notificationsDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -35,7 +39,7 @@ const Navbar: React.FC<NavbarProps> = () => {
   };
 
   const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
+    setIsDropdownOpen(!isDropdownOpen); // 現在の状態を反転させる
   };
 
   const closeDropdown = () => {
@@ -80,7 +84,7 @@ const Navbar: React.FC<NavbarProps> = () => {
     if (userId) {
       fetchCurrentUserProfile();
     } else {
-      setLoading(false);
+      setLoading(false); // userId がない場合も loading を false に設定
     }
   }, [userId]);
 
@@ -120,6 +124,7 @@ const Navbar: React.FC<NavbarProps> = () => {
             const sortedNotifications = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
             setNotifications(sortedNotifications);
 
+            // 送信者情報を取得 (上位5件のみ)
             sortedNotifications.slice(0, 5).forEach(async (notification) => {
               if (notification.sender_id && !senders[notification.sender_id]) {
                 try {
@@ -152,33 +157,43 @@ const Navbar: React.FC<NavbarProps> = () => {
   const displayedUsername: string = currentUserProfile?.display_name || currentUserProfile?.username ? (currentUserProfile.display_name || currentUserProfile.username).length > 10 ? (currentUserProfile.display_name || currentUserProfile.username).slice(0, 10) + '...' : (currentUserProfile.display_name || currentUserProfile.username) : '';
 
   const handleLogout = () => {
-    Swal.fire({
-      title: 'ログアウトしますか？',
-      text: 'ログアウトすると、再度ログインが必要になります。',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'ログアウト',
-      cancelButtonText: 'キャンセル',
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        // クライアントサイドの認証情報を削除
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userId');
-        setCurrentUserProfile(null);
+      Swal.fire({
+        title: 'ログアウトしますか？',
+        text: 'ログアウトすると、再度ログインが必要になります。',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'ログアウト',
+        cancelButtonText: 'キャンセル',
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            // クライアントサイドの認証情報を削除
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            setCurrentUserProfile(null); // プロフィール情報をクリア
+  
+            Swal.fire({
+              icon: 'success',
+              title: 'ログアウト成功',
+              showConfirmButton: false,
+              timer: 1500,
+            });
+  
+            router.push('/auth/login');
+          } catch (error: any) {
+            Swal.fire({
+              icon: 'error',
+              title: 'ログアウト中にエラーが発生しました',
+              text: error.message || 'ログアウト処理中に予期せぬエラーが発生しました。',
+            });
+          }
+        }
+      });
+    };
+  
 
-        Swal.fire({
-          icon: 'success',
-          title: 'ログアウトしました',
-          showConfirmButton: false,
-          timer: 1500,
-        });
-
-        router.push('/auth/login');
-      }
-    });
-  };
 
   return (
     <nav className="bg-gray-800 p-4 border-b border-gray-700">
@@ -188,7 +203,7 @@ const Navbar: React.FC<NavbarProps> = () => {
             <svg className="h-6 w-6 fill-current" viewBox="0 0 24 24">
               <path
                 fillRule="evenodd"
-                d="M4 5h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 0 010 2H4a1 1 0 010-2zm0 6h16a1 1 0 010 2H4a1 1 0 010-2z"
+                d="M4 5h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 1 0 010 2H4a1 1 0 010-2z"
                 clipRule="evenodd"
               />
             </svg>
@@ -257,11 +272,12 @@ const Navbar: React.FC<NavbarProps> = () => {
                 </AnimatePresence>
               </div>
 
-              <Link href="/messages" className="text-gray-300 hover:text-white  transition-colors hidden sm:block">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-                  <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
-                  <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
-                </svg>
+              <Link href="/messages" className="text-gray-300 hover:text-white  transition-colors hidden sm:block">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+              </svg>
+
               </Link>
               <div className="relative" ref={dropdownRef}>
                 <button onClick={toggleDropdown} className="flex items-center focus:outline-none">
@@ -301,7 +317,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                       <Link href={`/users/${userId}`} className="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
                         設定
                       </Link>
-                      <button onClick={handleLogout} className="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors w-full text-left">
+                      <button onClick={handleLogout} className="block px-4 py-2 text-red-500 hover:bg-gray-100 transition-colors">
                         ログアウト
                       </button>
                     </motion.div>
@@ -327,3 +343,4 @@ const Navbar: React.FC<NavbarProps> = () => {
 };
 
 export default Navbar;
+

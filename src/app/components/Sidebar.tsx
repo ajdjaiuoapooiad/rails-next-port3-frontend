@@ -119,16 +119,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       }`}
     >
       <div className="p-4 flex justify-end">
-        <button onClick={onClose} className="text-gray-400 hover:text-white focus:outline-none" aria-label="メニューを閉じる">
-          <svg className="h-6 w-6 fill-current" viewBox="0 0 24 24">
-            <path
-              fillRule="evenodd"
-              d="M18.27 16.27a1 1 0 01-1.414 1.414L12 13.414l-4.853 4.272a1 1 0 01-1.414-1.414L10.586 12 6.314 7.728a1 1 0 011.414-1.414L12 10.586l4.272-4.853a1 1 0 011.414 1.414L13.414 12l4.853 4.272z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
+          <button onClick={onClose} className="text-gray-400 hover:text-white focus:outline-none" aria-label="メニューを閉じる">
+              <svg className="h-6 w-6 fill-current" viewBox="0 0 24 24">
+                  <path
+                      fillRule="evenodd"
+                      d="M18.27 16.27a1 1 0 01-1.414 1.414L12 13.414l-4.853 4.272a1 1 0 01-1.414-1.414L10.586 12 6.314 7.728a1 1 0 011.414-1.414L12 10.586l4.272-4.853a1 1 0 011.414 1.414L13.414 12l4.853 4.272z"
+                      clipRule="evenodd"
+                  />
+              </svg>
+          </button>
       </div>
+      
       <nav className="p-4">
         {isAuthenticated ? (
           <>
