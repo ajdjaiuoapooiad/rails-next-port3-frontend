@@ -81,3 +81,15 @@ export interface Comment {
     user_icon_url?: string; //  APIからの user_icon_url を直接使用するため追加
     display_name?: string;
 }
+
+export interface Conversation {
+  id: number;
+  participants: {
+    id: number;
+    username: string;
+    display_name: string | null; // 表示名
+    user_icon_url: string | null;
+  }[];
+  last_message: string | null;
+  last_message_at: string | null;
+}

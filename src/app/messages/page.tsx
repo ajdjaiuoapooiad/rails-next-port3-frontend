@@ -6,18 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import Link from 'next/link';
+import { Conversation } from '../utils/types';
 
-interface Conversation {
-  id: number;
-  participants: {
-    id: number;
-    username: string;
-    display_name: string | null; // 表示名
-    user_icon_url: string | null;
-  }[];
-  last_message: string | null;
-  last_message_at: string | null;
-}
 
 const ConversationItem = ({ conversation }: { conversation: Conversation }) => {
   const currentUserId = localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : 0;
