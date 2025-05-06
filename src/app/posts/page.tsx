@@ -48,9 +48,6 @@ const PostIndexPage = () => {
   return (
     <div className="bg-gray-100 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
-          みんなの投稿
-        </h1>
         <div className="mb-8">
           <CreatePostForm
             onPostCreated={handlePostCreated}

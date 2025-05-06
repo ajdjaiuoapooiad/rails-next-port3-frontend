@@ -137,7 +137,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
   };
 
   return (
-    <Card className="bg-white shadow-md rounded-lg h-56  flex flex-col px-2">
+    <Card className="bg-white shadow-md rounded-lg h-56  flex flex-col px-2 py-2">
       <CardHeader className="py-1.5 px-2">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
           <Avatar className="h-6 w-6">
