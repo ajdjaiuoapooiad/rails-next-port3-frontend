@@ -1,150 +1,186 @@
-// pages/notifications.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { UserCircleIcon } from '@heroicons/react/24/solid';
+import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
-interface Notification {
-  id: number;
-  recipient_id: number;
-  sender_id: number | null;
-  notifiable_type: string;
-  notifiable_id: number;
-  notification_type: string;
-  read_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface UserProfile {
-  id: number;
-  username: string;
-  // その他のユーザー情報
+interface NotificationWithSender {
+    id: number;
+    recipient_id: number;
+    sender_id: number | null;
+    notifiable_type: string;
+    notifiable_id: number;
+    notification_type: string;
+    read_at: string | null;
+    created_at: string;
+    updated_at: string;
+    sender_display_name: string | null;
+    sender_user_icon_url: string | null;
 }
 
 const NotificationsPage: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [senders, setSenders] = useState<{ [userId: number]: UserProfile }>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const userId = localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : null; // userId を取得
+    const [notifications, setNotifications] = useState<NotificationWithSender[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const userId = localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : null;
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          setError('認証されていません。');
-          setLoading(false);
-          return;
-        }
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          setError(`通知の取得に失敗しました: ${errorData.message || response.statusText}`);
-          setLoading(false);
-          return;
-        }
-
-        const data: Notification[] = await response.json();
-        // 自分の通知のみをフィルタリング
-        const myNotifications = data.filter((notification) => notification.recipient_id === userId);
-        const sortedNotifications = myNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        setNotifications(sortedNotifications);
-
-        // 各通知の送信者情報を取得
-        sortedNotifications.forEach(async (notification) => {
-          if (notification.sender_id && !senders[notification.sender_id]) {
+    useEffect(() => {
+        const fetchNotifications = async () => {
             try {
-              const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profiles/${notification.sender_id}`, {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                },
-              });
-              if (profileResponse.ok) {
-                const profileData: UserProfile = await profileResponse.json();
-                setSenders((prevSenders) => ({ ...prevSenders, [profileData.id]: profileData }));
-              } else {
-                console.error(`Failed to fetch profile for user ID: ${notification.sender_id}`);
-              }
-            } catch (err) {
-              console.error(`Error fetching profile for user ID: ${notification.sender_id}`, err);
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    setError('認証されていません。');
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    setError(`通知の取得に失敗しました: ${errorData.message || response.statusText}`);
+                    setLoading(false);
+                    return;
+                }
+
+                const data: NotificationWithSender[] = await response.json();
+                const myNotifications = data.filter((notification) => notification.recipient_id === userId);
+                const sortedNotifications = myNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                setNotifications(sortedNotifications);
+                setLoading(false);
+            } catch (err: any) {
+                setError(`通知の取得中にエラーが発生しました: ${err.message}`);
+                setLoading(false);
             }
-          }
-        });
+        };
 
-        setLoading(false);
-      } catch (err: any) {
-        setError(`通知の取得中にエラーが発生しました: ${err.message}`);
-        setLoading(false);
-      }
-    };
+        if (userId !== null) {
+            fetchNotifications();
+        } else {
+            setLoading(false);
+        }
+    }, [userId]);
 
-    if (userId !== null) { // userId が存在する場合のみ API を呼び出す
-      fetchNotifications();
-    } else {
-      setLoading(false);
-    }
-  }, [userId]); // userId が変更されたときも再実行
-
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen">通知と送信者の情報を読み込み中...</div>;
-  }
-
-  if (error) {
-    return <div className="flex justify-center items-center h-screen">エラーが発生しました: {error}</div>;
-  }
-
-  if (notifications.length === 0) {
-    return <div className="flex justify-center items-center h-screen">まだ通知はありません。</div>;
-  }
-
-  return (
-    <div className="bg-gray-100 py-6 sm:py-8 lg:py-12">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-xl font-bold text-gray-800 sm:text-2xl lg:text-3xl text-center mb-6">
-          通知
-        </h1>
-        <ul>
-          {notifications.map((notification) => (
-            <li key={notification.id} className="bg-white shadow rounded-md p-4 mb-2">
-              <div className="flex items-center space-x-2">
-                {notification.sender_id && senders[notification.sender_id]?.username && (
-                  <div className="font-semibold">{senders[notification.sender_id].username}</div>
-                )}
-                {notification.sender_id && senders[notification.sender_id]?.username && <div>さんが</div>}
-                <div className="font-semibold">
-                  {notification.notification_type === 'like' && 'いいね！しました'}
-                  {notification.notification_type === 'comment' && 'コメントしました'}
-                  {notification.notification_type === 'follow' && 'あなたをフォローしました'}
-                  {notification.notification_type === 'message' && '新しいメッセージを送信しました'}
+    if (loading) {
+        return (
+            <div className="bg-gray-100 py-6 sm:py-8 lg:py-12">
+                <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <h1 className="text-xl font-bold text-gray-800 sm:text-2xl lg:text-3xl text-center mb-6">
+                        通知
+                    </h1>
+                    <div className="space-y-4">
+                        {Array.from({ length: 5 }).map((_, index) => (
+                            <div key={index} className="bg-white shadow rounded-md p-4 flex items-center space-x-3 animate-pulse">
+                                <div className="w-10 h-10 rounded-full bg-gray-300"></div>
+                                <div className="flex-1">
+                                    <div className="h-4 bg-gray-300 rounded w-3/4 mb-1"></div>
+                                    <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                                </div>
+                                <div className="w-12 h-4 bg-gray-300 rounded"></div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                {notification.notifiable_id && (
-                  <div className="text-gray-500">
-                    {notification.notification_type === 'comment' && `(コメント ID: ${notification.notifiable_id})`}
-                    {notification.notification_type === 'like' && `(投稿 ID: ${notification.notifiable_id})`}
-                    {notification.notification_type === 'follow' && ''}
-                    {notification.notification_type === 'message' && `(メッセージ ID: ${notification.notifiable_id})`}
-                  </div>
-                )}
-              </div>
-              <div className="text-sm text-gray-600 mt-1">
-                {new Date(notification.created_at).toLocaleString()}
-              </div>
-              {!notification.read_at && (
-                <div className="text-xs text-blue-500 mt-1">未読</div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-gray-100 py-6 sm:py-8 lg:py-12">
+                <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="bg-white shadow rounded-md p-6 text-center">
+                        <h1 className="text-xl font-bold text-red-500 mb-4">エラー</h1>
+                        <p className="text-gray-700">{error}</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (notifications.length === 0) {
+        return (
+            <div className="bg-gray-100 py-6 sm:py-8 lg:py-12">
+                <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="bg-white shadow rounded-md p-6 text-center">
+                        <h1 className="text-xl font-semibold text-gray-800 mb-4">通知</h1>
+                        <p className="text-gray-600">まだ通知はありません。</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-gray-100 py-6 sm:py-8 lg:py-12">
+            <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 className="text-xl font-bold text-gray-800 sm:text-2xl lg:text-3xl text-center mb-6">
+                    通知
+                </h1>
+                <ul className="space-y-3">
+                    {notifications.map((notification) => (
+                        <li key={notification.id} className="bg-white shadow rounded-md p-4 flex items-center space-x-3">
+                            <div className="flex-shrink-0">
+                                {notification.sender_user_icon_url ? (
+                                    <img
+                                        src={notification.sender_user_icon_url}
+                                        alt={`${notification.sender_display_name || '不明'}のアイコン`}
+                                        className="w-10 h-10 rounded-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = '/images/default-avatar.png';
+                                        }}
+                                    />
+                                ) : (
+                                    <UserCircleIcon className="w-10 h-10 text-gray-400" />
+                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-gray-900">
+                                    {notification.sender_display_name || '不明なユーザー'}
+                                    <span className="ml-1 text-gray-500">さんが</span>
+                                    {notification.notification_type === 'like' && 'いいね！しました'}
+                                    {notification.notification_type === 'comment' && 'コメントしました'}
+                                    {notification.notification_type === 'follow' && 'あなたをフォローしました'}
+                                    {notification.notification_type === 'message' && '新しいメッセージを送信しました'}
+                                </div>
+                                {notification.notifiable_id && (
+                                    <p className="text-sm text-gray-500 truncate">
+                                        {notification.notification_type === 'comment' && `(コメント ID: ${notification.notifiable_id})`}
+                                        {notification.notification_type === 'like' && `(投稿 ID: ${notification.notifiable_id})`}
+                                        {notification.notification_type === 'follow' && ''}
+                                        {notification.notification_type === 'message' && `(メッセージ ID: ${notification.notifiable_id})`}
+                                    </p>
+                                )}
+                                <p className="text-xs text-gray-600 mt-1">
+                                    {new Date(notification.created_at).toLocaleString()}
+                                    {!notification.read_at && (
+                                        <span className="ml-2 text-blue-500">[未読]</span>
+                                    )}
+                                </p>
+                            </div>
+                            {/* 既読にするボタン (API連携は別途実装が必要です) */}
+                            {!notification.read_at && (
+                                <button
+                                    className="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    onClick={() => {
+                                        // ここに既読にする API 呼び出しを実装します
+                                        console.log(`Notification ${notification.id} を既読にする`);
+                                    }}
+                                >
+                                    既読にする
+                                </button>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+    );
 };
 
 export default NotificationsPage;
