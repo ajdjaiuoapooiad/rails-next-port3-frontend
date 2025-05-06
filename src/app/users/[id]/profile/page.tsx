@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils"
 //import PostList from '@/app/components/posts/PostList'; // 独自のPostListコンポーネントは一旦コメントアウト
 import CurrentUserPostList from '@/app/components/posts/CurrentUserPostList';
 import LikedPostsList from '@/app/components/posts/LikedPostsList';
+import Link from 'next/link';
 
 
 interface UserProfile {
