@@ -8,16 +8,19 @@ export interface User {
 }
 
 export interface Notification {
-    id: number;
-    recipient_id: number;
-    sender_id: number | null;
-    notifiable_type: string;
-    notifiable_id: number;
-    notification_type: string;
-    read_at: string | null;
-    created_at: string;
-    updated_at: string;
+  id: number;
+  recipient_id: number;
+  sender_id: number | null;
+  notifiable_type: string;
+  notifiable_id: number;
+  notification_type: string;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+  sender_display_name?: string; // 追加
+  sender_user_icon_url?: string; // 追加
 }
+
 
 export interface UserProfile {
     id: number;

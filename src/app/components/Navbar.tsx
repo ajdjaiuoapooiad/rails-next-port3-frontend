@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
-import { ChevronDownIcon, BellIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/20/solid'; // ログアウトアイコンを追加
+import { ChevronDownIcon, BellIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/20/solid';
 import NotificationList from './notifications/NotificationList';
 import { UserProfile, Notification } from '../utils/types';
 import { Skeleton } from "@/components/ui/skeleton"
@@ -20,11 +20,11 @@ const Navbar: React.FC<NavbarProps> = () => {
     const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [profileLoading, setProfileLoading] = useState(true);
-    const [notificationsLoading, setNotificationsLoading] = useState(true);
 
     // 通知関連のステート
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [senders, setSenders] = useState<{ [userId: number]: UserProfile }>({});
+    const [notificationsLoading, setNotificationsLoading] = useState(true);
+    const [notificationsError, setNotificationsError] = useState<string | null>(null);
     const [isNotificationsDropdownOpen, setIsNotificationsDropdownOpen] = useState(false);
     const notificationsDropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -40,7 +40,7 @@ const Navbar: React.FC<NavbarProps> = () => {
     };
 
     const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen); // 現在の状態を反転させる
+        setIsDropdownOpen(!isDropdownOpen);
     };
 
     const closeDropdown = () => {
@@ -107,7 +107,7 @@ const Navbar: React.FC<NavbarProps> = () => {
         };
     }, [isDropdownOpen, isNotificationsDropdownOpen]);
 
-    const markAsRead = async (notificationId: number) => {
+    const markAsRead = useCallback(async (notificationId: number) => {
         if (!authToken) {
             console.error('認証トークンがありません。');
             return;
@@ -135,13 +135,14 @@ const Navbar: React.FC<NavbarProps> = () => {
         } catch (error) {
             console.error('既読状態の更新中にエラーが発生しました:', error);
         }
-    };
+    }, [authToken, setNotifications]);
 
     useEffect(() => {
         const fetchNotifications = async () => {
             setNotificationsLoading(true);
+            setNotificationsError(null);
             try {
-                if (authToken) {
+                if (authToken && userId) {
                     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
                         headers: {
                             'Authorization': `Bearer ${authToken}`,
@@ -149,39 +150,31 @@ const Navbar: React.FC<NavbarProps> = () => {
                     });
                     if (response.ok) {
                         const data: Notification[] = await response.json();
-                        const sortedNotifications = data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                        // ログインユーザー宛の通知のみをフィルタリング
+                        const filteredNotifications = data.filter(n => n.recipient_id === parseInt(userId, 10));
+                        const sortedNotifications = filteredNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                         setNotifications(sortedNotifications);
-
-                        // 送信者情報を取得 (上位5件のみ)
-                        sortedNotifications.slice(0, 5).forEach(async (notification) => {
-                            if (notification.sender_id && !senders[notification.sender_id]) {
-                                try {
-                                    const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/profiles/${notification.sender_id}`, {
-                                        headers: {
-                                            'Authorization': `Bearer ${authToken}`,
-                                        },
-                                    });
-                                    if (profileResponse.ok) {
-                                        const profileData: UserProfile = await profileResponse.json();
-                                        setSenders((prevSenders) => ({ ...prevSenders, [profileData.id]: profileData }));
-                                    }
-                                } catch (error) {
-                                    console.error('Error fetching sender profile for notification:', error);
-                                }}
-                        });
                     } else {
                         console.error('Failed to fetch notifications in Navbar');
+                        setNotificationsError('通知の取得に失敗しました。');
                     }
+                } else if (!authToken) {
+                    console.error('認証トークンがありません。');
+                    setNotificationsError('認証が必要です。');
+                } else if (!userId) {
+                    console.error('ユーザーIDがありません。');
+                    setNotificationsError('ユーザー情報が見つかりません。');
                 }
             } catch (error) {
                 console.error('Error fetching notifications in Navbar:', error);
+                setNotificationsError('通知の取得中にエラーが発生しました。');
             } finally {
                 setNotificationsLoading(false);
             }
         };
 
         fetchNotifications();
-    }, [authToken]);
+    }, [authToken, userId]);
 
     const displayedUsername: string = currentUserProfile?.display_name || currentUserProfile?.username ? (currentUserProfile.display_name || currentUserProfile.username).length > 10 ? (currentUserProfile.display_name || currentUserProfile.username).slice(0, 10) + '...' : (currentUserProfile.display_name || currentUserProfile.username) : '';
 
@@ -198,10 +191,9 @@ const Navbar: React.FC<NavbarProps> = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    // クライアントサイドの認証情報を削除
                     localStorage.removeItem('authToken');
                     localStorage.removeItem('userId');
-                    setCurrentUserProfile(null); // プロフィール情報をクリア
+                    setCurrentUserProfile(null);
 
                     Swal.fire({
                         icon: 'success',
@@ -217,7 +209,8 @@ const Navbar: React.FC<NavbarProps> = () => {
                         title: 'ログアウト中にエラーが発生しました',
                         text: error.message || 'ログアウト処理中に予期せぬエラーが発生しました。',
                     });
-                }            }
+                }
+            }
         });
     };
 
@@ -287,15 +280,19 @@ const Navbar: React.FC<NavbarProps> = () => {
                                                             <Skeleton key={index} className="h-10 bg-gray-200 rounded" />
                                                         ))}
                                                     </div>
+                                                ) : notificationsError ? (
+                                                    <div className="text-red-500 p-2">{notificationsError}</div>
                                                 ) : notifications.length > 0 ? (
                                                     <NotificationList
                                                         notifications={notifications.slice(0, 5)}
                                                         markAsRead={markAsRead}
+                                                        loading={notificationsLoading}
+                                                        error={notificationsError}
                                                     />
                                                 ) : (
                                                     <div className="text-gray-600 p-2">まだ通知はありません。</div>
                                                 )}
-                                                {notifications.length > 5 && !notificationsLoading && (
+                                                {notifications.length > 5 && !notificationsLoading && !notificationsError && (
                                                     <Link href="/notifications" className="block text-center text-blue-500 hover:underline p-2">
                                                         すべて表示
                                                     </Link>
