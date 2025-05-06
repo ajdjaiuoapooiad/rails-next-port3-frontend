@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { Skeleton } from '@/components/ui/skeleton';
-import Link from 'next/link';
 
 interface NotificationWithSender {
     id: number;
@@ -37,7 +36,6 @@ const NotificationsPage: React.FC = () => {
 
                 const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
                     headers: {
-                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`,
                     },
                 });
@@ -66,6 +64,30 @@ const NotificationsPage: React.FC = () => {
             setLoading(false);
         }
     }, [userId]);
+
+    const markAsReadLocal = (notificationId: number) => {
+        setNotifications((prevNotifications) =>
+            prevNotifications.map((notification) =>
+                notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
+            )
+        );
+        // ここでバックエンドの API を呼び出して read_at を更新することも可能です
+        // 例：
+        // const token = localStorage.getItem('authToken');
+        // if (token) {
+        //     fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${notificationId}/mark_as_read`, {
+        //         method: 'PUT',
+        //         headers: {
+        //             'Authorization': `Bearer ${token}`,
+        //             'Content-Type': 'application/json',
+        //         },
+        //     }).then(response => {
+        //         if (!response.ok) {
+        //             console.error('既読状態の更新に失敗しました');
+        //         }
+        //     });
+        // }
+    };
 
     if (loading) {
         return (
@@ -125,7 +147,10 @@ const NotificationsPage: React.FC = () => {
                 </h1>
                 <ul className="space-y-3">
                     {notifications.map((notification) => (
-                        <li key={notification.id} className="bg-white shadow rounded-md p-4 flex items-center space-x-3">
+                        <li
+                            key={notification.id}
+                            className={`bg-white shadow rounded-md p-4 flex items-center space-x-3 ${notification.read_at ? 'opacity-50' : ''}`}
+                        >
                             <div className="flex-shrink-0">
                                 {notification.sender_user_icon_url ? (
                                     <img
@@ -162,16 +187,15 @@ const NotificationsPage: React.FC = () => {
                                     {!notification.read_at && (
                                         <span className="ml-2 text-blue-500">[未読]</span>
                                     )}
+                                    {notification.read_at && (
+                                        <span className="ml-2 text-gray-500">[既読]</span>
+                                    )}
                                 </p>
                             </div>
-                            {/* 既読にするボタン (API連携は別途実装が必要です) */}
                             {!notification.read_at && (
                                 <button
                                     className="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                    onClick={() => {
-                                        // ここに既読にする API 呼び出しを実装します
-                                        console.log(`Notification ${notification.id} を既読にする`);
-                                    }}
+                                    onClick={() => markAsReadLocal(notification.id)}
                                 >
                                     既読にする
                                 </button>
