@@ -5,8 +5,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { User, ImagePlus, Loader2 } from "lucide-react"
+import { User, ImagePlus, Loader2, XCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from 'framer-motion';
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface UserProfile {
   id: number;
@@ -32,6 +34,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true); // 追加：ローディング状態
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -52,6 +55,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
     } catch (error) {
       console.error('Error fetching user info:', error);
       return null;
+    } finally {
+      setLoading(false); // 取得後にローディングを解除
     }
   };
 
@@ -137,11 +142,13 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
   };
 
   return (
-    <Card className="bg-white shadow-md rounded-lg h-56  flex flex-col px-2 py-2">
+    <Card className="bg-white shadow-md rounded-lg h-auto min-h-[140px] flex flex-col px-2 py-2">
       <CardHeader className="py-1.5 px-2">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
           <Avatar className="h-6 w-6">
-            {user?.user_icon_url ? (
+            {loading ? (  // ローディング中はスケルトンを表示
+              <Skeleton className="h-6 w-6 rounded-full" />
+            ) : user?.user_icon_url ? (
               <AvatarImage src={user.user_icon_url} alt={`${user?.display_name || user?.username || '投稿者'}のアイコン`} className="rounded-full" />
             ) : (
               <AvatarFallback className="text-gray-400">
@@ -149,9 +156,13 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
               </AvatarFallback>
             )}
           </Avatar>
-          <div className="text-base text-gray-900 truncate font-normal">
-            {user?.display_name || user?.username || '投稿者'}
-          </div>
+          {loading ? (
+            <Skeleton className="h-4 w-24" /> // ローディング中はスケルトンを表示
+          ) : (
+            <div className="text-base text-gray-900 truncate font-normal">
+              {user?.display_name || user?.username || '投稿者'}
+            </div>
+          )}
         </CardTitle>
         <div className="text-xs text-gray-500 pt-0.5">新しい投稿を作成</div>
       </CardHeader>
@@ -161,7 +172,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
             <Textarea
               id="postContent"
               rows={2}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-500 text-sm resize-none h-1/2"
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-500 text-sm resize-none h-full min-h-[60px]"
               placeholder="今何してる？"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -172,6 +183,30 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
               {content.length} / 280
             </p>
           </div>
+
+          {/* 画像プレビュー */}
+          <AnimatePresence>
+            {imagePreview && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="mt-2 relative rounded-md overflow-hidden border border-dashed border-gray-300"
+              >
+                <img src={imagePreview} alt="投稿プレビュー" className="w-full h-auto max-h-64 object-contain" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleRemoveImage}
+                  className="absolute top-1 right-1 bg-black/50 text-white hover:bg-black/70 rounded-full"
+                  title="画像を削除"
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 画像選択ボタン */}
           <div className="flex items-center gap-2 mt-2">
@@ -198,12 +233,12 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
             )}
           </div>
 
-          <CardFooter className="justify-end  px-0">
+          <CardFooter className="justify-end px-0 mt-2">
             <Button
               type="submit"
               size="sm"
               className={cn(
-                "bg-blue-500 hover:bg-blue-600 text-white font-semibold  px-4 rounded-full transition-colors duration-200 text-sm",
+                "bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 rounded-full transition-colors duration-200 text-sm",
                 isSubmitting && "opacity-70 cursor-not-allowed"
               )}
               disabled={isSubmitting}
