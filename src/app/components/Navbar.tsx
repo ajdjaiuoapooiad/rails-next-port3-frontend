@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
@@ -150,7 +151,7 @@ const Navbar: React.FC<NavbarProps> = () => {
 
   const displayedUsername: string = currentUserProfile?.display_name || currentUserProfile?.username ? (currentUserProfile.display_name || currentUserProfile.username).length > 10 ? (currentUserProfile.display_name || currentUserProfile.username).slice(0, 10) + '...' : (currentUserProfile.display_name || currentUserProfile.username) : '';
 
-    const handleLogout = async () => {
+  const handleLogout = () => {
     Swal.fire({
       title: 'ログアウトしますか？',
       text: 'ログアウトすると、再度ログインが必要になります。',
@@ -162,48 +163,19 @@ const Navbar: React.FC<NavbarProps> = () => {
       cancelButtonText: 'キャンセル',
     }).then(async (result) => {
       if (result.isConfirmed) {
-        try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-          const token = localStorage.getItem('authToken');
+        // クライアントサイドの認証情報を削除
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userId');
+        setCurrentUserProfile(null);
 
-          const logoutResponse = await fetch(`${apiUrl}/auth/logout`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
+        Swal.fire({
+          icon: 'success',
+          title: 'ログアウトしました',
+          showConfirmButton: false,
+          timer: 1500,
+        });
 
-          if (logoutResponse.ok || logoutResponse.status === 401) {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userId');
-            setCurrentUserProfile(null);
-
-            Swal.fire({
-              icon: 'success',
-              title: 'ログアウト成功',
-              showConfirmButton: false,
-              timer: 1500,
-            });
-
-            router.push('/auth/login');
-          } else {
-            const errorData = await logoutResponse.json();
-            Swal.fire({
-              icon: 'error',
-              title: 'ログアウトに失敗しました',
-              text: errorData?.message || 'サーバーとの通信中にエラーが発生しました。',
-            });
-            console.error('Logout failed:', errorData);
-          }
-        } catch (error: any) {
-          Swal.fire({
-            icon: 'error',
-            title: 'ログアウト中にエラーが発生しました',
-            text: error.message || 'ログアウト処理中に予期せぬエラーが発生しました。',
-          });
-          console.error('Logout error:', error);
-        }
+        router.push('/auth/login');
       }
     });
   };
@@ -216,7 +188,7 @@ const Navbar: React.FC<NavbarProps> = () => {
             <svg className="h-6 w-6 fill-current" viewBox="0 0 24 24">
               <path
                 fillRule="evenodd"
-                d="M4 5h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 1 0 010 2H4a1 1 0 010-2z"
+                d="M4 5h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 0 010 2H4a1 1 0 010-2zm0 6h16a1 1 0 010 2H4a1 1 0 010-2z"
                 clipRule="evenodd"
               />
             </svg>
