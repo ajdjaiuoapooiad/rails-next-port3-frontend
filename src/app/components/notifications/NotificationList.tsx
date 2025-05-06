@@ -1,25 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Bell, CheckCircle, XCircle, AlertTriangle, Mail, MessageSquare, Heart, UserPlus } from 'lucide-react';
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface NotificationItemProps {
-    notification: {
-        id: number;
-        recipient_id: number;
-        sender_id: number | null;
-        notifiable_type: string;
-        notifiable_id: number;
-        notification_type: string;
-        read_at: string | null;
-        created_at: string;
-        updated_at: string;
-        sender_display_name: string | null;
-        sender_user_icon_url: string | null;
-    };
-    markAsRead: (notificationId: number) => void;
+interface Notification {
+    id: number;
+    recipient_id: number;
+    sender_id: number | null;
+    notifiable_type: string;
+    notifiable_id: number;
+    notification_type: string;
+    read_at: string | null;
+    created_at: string;
+    updated_at: string;
+    sender_display_name: string | null;
+    sender_user_icon_url: string | null;
 }
 
 const getNotificationIcon = (type: string) => {
@@ -37,7 +34,7 @@ const getNotificationIcon = (type: string) => {
     }
 };
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ notification, markAsRead }) => {
+const NotificationItem: React.FC<{ notification: Notification; markAsRead: (id:number) => void }> = ({ notification, markAsRead }) => {
     const isRead = !!notification.read_at;
     const notificationIcon = getNotificationIcon(notification.notification_type);
 
@@ -108,28 +105,81 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, markA
     );
 };
 
-interface NotificationListProps {
-    notifications: {
-        id: number;
-        recipient_id: number;
-        sender_id: number | null;
-        notifiable_type: string;
-        notifiable_id: number;
-        notification_type: string;
-        read_at: string | null;
-        created_at: string;
-        updated_at: string;
-        sender_display_name: string | null;
-        sender_user_icon_url: string | null;
-    }[];
-    loading: boolean;
-    error: string | null;
-    markAsRead: (notificationId: number) => void;
-}
-
-const NotificationList: React.FC<NotificationListProps> = ({ notifications, loading, error, markAsRead }) => {
+const NotificationList: React.FC<{}> = () => {
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const userId = localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : null;
-    const myNotifications = userId ? notifications.filter(notification => notification.recipient_id === userId) : [];
+    const [unreadCount, setUnreadCount] = useState(0);
+
+
+    const fetchNotifications = async () => {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                setError('認証されていません。');
+                setLoading(false);
+                return;
+            }
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                setError(`通知の取得に失敗しました: ${errorData.message || response.statusText}`);
+                setLoading(false);
+                return;
+            }
+
+            const data: { notifications: Notification[], unread_count: number } = await response.json();
+            const myNotifications = data.notifications.filter((notification) => notification.recipient_id === userId);
+            const sortedNotifications = myNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            setNotifications(sortedNotifications);
+            setUnreadCount(data.unread_count);
+            setLoading(false);
+        } catch (err: any) {
+            setError(`通知の取得中にエラーが発生しました: ${err.message}`);
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (userId !== null) {
+            fetchNotifications();
+        } else {
+            setLoading(false);
+        }
+    }, [userId]);
+
+    const markAsRead = (notificationId: number) => {
+        setNotifications((prevNotifications) =>
+            prevNotifications.map((notification) =>
+                notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
+            )
+        );
+        setUnreadCount(prevCount => prevCount > 0 ? prevCount - 1 : 0);
+        // ここでバックエンドの API を呼び出して read_at を更新することも可能です
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${notificationId}/mark_as_read`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            }).then(response => {
+                if (!response.ok) {
+                    console.error('既読状態の更新に失敗しました');
+                }
+            });
+        }
+    };
+
 
     if (loading) {
         return (
@@ -158,10 +208,32 @@ const NotificationList: React.FC<NotificationListProps> = ({ notifications, load
         );
     }
 
+    if (notifications.length === 0 && userId !== null) {
+        return (
+            <div className="bg-white shadow-md rounded-lg p-4 text-center">
+                <CheckCircle className="w-6 h-6 mx-auto text-green-500 mb-2" />
+                <p className="text-gray-600">まだ通知はありません。</p>
+            </div>
+        );
+    }
+
+    if (userId === null) {
+        return (
+            <div className="bg-white shadow-md rounded-lg p-4 text-center flex flex-col items-center justify-center">
+                <XCircle className="w-8 h-8 mx-auto text-red-500 mb-4" />
+                <p className="text-gray-600">ログインして通知を確認してください。</p>
+            </div>
+        );
+    }
+
     return (
+        <>
+        <h1 className="text-xl font-bold text-gray-800 sm:text-2xl lg:text-3xl text-center mb-6">
+            通知 ({unreadCount} 件の未読)
+        </h1>
         <ul className="space-y-4">
             <AnimatePresence>
-                {myNotifications.map((notification) => (
+                {notifications.map((notification) => (
                     <NotificationItem
                         key={notification.id}
                         notification={notification}
@@ -169,19 +241,8 @@ const NotificationList: React.FC<NotificationListProps> = ({ notifications, load
                     />
                 ))}
             </AnimatePresence>
-            {myNotifications.length === 0 && userId !== null && (
-                <li className="bg-white shadow-md rounded-lg p-4 text-center">
-                    <CheckCircle className="w-6 h-6 mx-auto text-green-500 mb-2" />
-                    <p className="text-gray-600">まだ通知はありません。</p>
-                </li>
-            )}
-            {userId === null && (
-                <li className="bg-white shadow-md rounded-lg p-4 text-center flex flex-col items-center justify-center">
-                    <XCircle className="w-8 h-8 mx-auto text-red-500 mb-4" />
-                    <p className="text-gray-600">ログインして通知を確認してください。</p>
-                </li>
-            )}
         </ul>
+        </>
     );
 };
 

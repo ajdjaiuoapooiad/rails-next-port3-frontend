@@ -21,7 +21,6 @@ export interface Notification {
   sender_user_icon_url?: string; // 追加
 }
 
-
 export interface UserProfile {
     id: number;
     username: string;

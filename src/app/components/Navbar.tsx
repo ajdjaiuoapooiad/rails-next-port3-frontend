@@ -3,16 +3,30 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
-import { UserCircleIcon } from '@heroicons/react/24/solid';
-import { ChevronDownIcon, BellIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/20/solid';
+import { UserCircleIcon, BellIcon, ArrowRightOnRectangleIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
 import NotificationList from './notifications/NotificationList';
 import { UserProfile, Notification } from '../utils/types';
 import { Skeleton } from "@/components/ui/skeleton"
 import { motion, AnimatePresence } from 'framer-motion';
 import Swal from 'sweetalert2';
 import { useRouter } from 'next/navigation';
+import { cn } from "@/lib/utils"
 
 interface NavbarProps {}
+
+export interface Notification {
+  id: number;
+  recipient_id: number;
+  sender_id: number | null;
+  notifiable_type: string;
+  notifiable_id: number;
+  notification_type: string;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+  sender_display_name?: string; // 追加
+  sender_user_icon_url?: string; // 追加
+}
 
 const Navbar: React.FC<NavbarProps> = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -123,8 +137,8 @@ const Navbar: React.FC<NavbarProps> = () => {
             });
 
             if (response.ok) {
-                setNotifications((prevNotifications) =>
-                    prevNotifications.map((notification) =>
+                setNotifications(prevNotifications =>
+                    prevNotifications.map(notification =>
                         notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
                     )
                 );
@@ -135,7 +149,7 @@ const Navbar: React.FC<NavbarProps> = () => {
         } catch (error) {
             console.error('既読状態の更新中にエラーが発生しました:', error);
         }
-    }, [authToken, setNotifications]);
+    }, [authToken]);
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -149,11 +163,17 @@ const Navbar: React.FC<NavbarProps> = () => {
                         },
                     });
                     if (response.ok) {
-                        const data: Notification[] = await response.json();
-                        // ログインユーザー宛の通知のみをフィルタリング
-                        const filteredNotifications = data.filter(n => n.recipient_id === parseInt(userId, 10));
-                        const sortedNotifications = filteredNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-                        setNotifications(sortedNotifications);
+                        const data = await response.json();
+                        // APIのレスポンスがオブジェクトであることを確認し、notificationsプロパティを使用する
+                        if (data && Array.isArray(data.notifications)) {
+                            // ログインユーザー宛の通知のみをフィルタリング
+                            const filteredNotifications = data.notifications.filter((n: Notification) => n.recipient_id === parseInt(userId, 10));
+                            const sortedNotifications = filteredNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+                            setNotifications(sortedNotifications);
+                        } else {
+                            console.error('Invalid response: Expected an object with a notifications array, but got:', data);
+                            setNotificationsError('サーバーから無効な応答がありました。');
+                        }
                     } else {
                         console.error('Failed to fetch notifications in Navbar');
                         setNotificationsError('通知の取得に失敗しました。');
@@ -224,7 +244,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                         <svg className="h-6 w-6 fill-current" viewBox="0 0 24 24">
                             <path
                                 fillRule="evenodd"
-                                d="M4 5h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 1 0 010 2H4a1 1 0 010-2z"
+                                d="M4 5h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 0 010 2H4a1 0 010-2zm0 6h16a1 1 0 010 2H4a1 0 010-2z"
                                 clipRule="evenodd"
                             />
                         </svg>
@@ -328,7 +348,10 @@ const Navbar: React.FC<NavbarProps> = () => {
                                         )}
                                         <span className="text-white ml-2 text-sm hidden sm:inline">{displayedUsername}</span>
                                         <ChevronDownIcon
-                                            className={`h-5 w-5 text-gray-300 ml-1 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                                            className={cn(
+                                                "h-5 w-5 text-gray-300 ml-1 transition-transform",
+                                                isDropdownOpen && 'rotate-180'
+                                            )}
                                         />
                                     </div>
                                 </button>
@@ -378,3 +401,4 @@ const Navbar: React.FC<NavbarProps> = () => {
 };
 
 export default Navbar;
+
