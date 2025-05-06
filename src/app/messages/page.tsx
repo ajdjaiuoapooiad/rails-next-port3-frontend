@@ -1,4 +1,3 @@
-// src/app/messages/page.tsx
 'use client';
 
 import Link from 'next/link';
@@ -81,7 +80,18 @@ export default function MessagesIndexPage() {
         }
 
         const data: Conversation[] = await res.json();
-        setConversations(data);
+        // 最終メッセージの日時で降順にソート
+        const sortedData = data.sort((a, b) => {
+            if (a.last_message_at && b.last_message_at) {
+                return new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime();
+            }  else if (a.last_message_at) {
+                return -1; // aが新しい
+            } else if (b.last_message_at) {
+                return 1; // bが新しい
+            }
+            return 0;
+        });
+        setConversations(sortedData);
       } catch (e: any) {
         console.error("An error occurred while fetching conversations:", e);
         setError(`メッセージの読み込み中にエラーが発生しました: ${e.message}`);

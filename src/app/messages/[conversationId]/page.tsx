@@ -1,173 +1,210 @@
-// src/app/messages/[conversationId]/page.tsx
 'use client';
 
-import { useParams } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import React, { useParams } from 'next/navigation';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import { Send, Loader2, AlertTriangle } from 'lucide-react'; // アイコンを追加
+import { cn } from '@/lib/utils'; // utility関数 (class名をまとめる)
 
 interface Message {
-  id: number;
-  content: string;
-  user: { id: number; username: string; profile?: { user_icon_url?: string } };
-  created_at: string;
+    id: number;
+    content: string;
+    user: { id: number; username: string; profile?: { user_icon_url?: string } };
+    created_at: string;
 }
 
-export default function MessageDetailPage() {
-  const { conversationId } = useParams();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+const MessageDetailPage = () => {
+    const { conversationId } = useParams();
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [newMessage, setNewMessage] = useState('');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    async function fetchMessages() {
-      if (!conversationId) return;
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const authToken = localStorage.getItem('authToken');
+    const fetchMessages = useCallback(async () => {
+        if (!conversationId) return;
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+            const authToken = localStorage.getItem('authToken');
 
-        if (!apiUrl) throw new Error("API URL が設定されていません。");
-        if (!authToken) throw new Error("認証されていません。");
+            if (!apiUrl) throw new Error("API URL が設定されていません。");
+            if (!authToken) throw new Error("認証されていません。");
 
-        const res = await fetch(`${apiUrl}/conversations/${conversationId}/messages`, {
-          headers: { 'Authorization': `Bearer ${authToken}` },
-        });
+            const res = await fetch(`${apiUrl}/conversations/${conversationId}/messages`, {
+                headers: { 'Authorization': `Bearer ${authToken}` },
+            });
 
-        if (!res.ok) {
-          const errorData = await res.json();
-          console.error("Error fetching messages:", errorData);
-          throw new Error(`メッセージの読み込みに失敗しました (${res.status})`);
+            if (!res.ok) {
+                const errorData = await res.json();
+                console.error("Error fetching messages:", errorData);
+                throw new Error(`メッセージの読み込みに失敗しました (${res.status})`);
+            }
+
+            const data: Message[] = await res.json();
+            setMessages(data);
+            setLoading(false);
+            scrollToBottom();
+        } catch (e: any) {
+            console.error("Error:", e);
+            setError(e.message);
+            setLoading(false);
         }
+    }, [conversationId]);
 
-        const data: Message[] = await res.json();
-        setMessages(data);
-        setLoading(false);
+    useEffect(() => {
+        fetchMessages();
+    }, [fetchMessages]);
+
+    useEffect(() => {
         scrollToBottom();
-      } catch (e: any) {
-        console.error("Error:", e);
-        setError(e.message);
-        setLoading(false);
-      }
-    }
+    }, [messages]);
 
-    fetchMessages();
-  }, [conversationId]);
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const handleSendMessage = async () => {
+        if (!newMessage.trim() || !conversationId) return;
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+            const authToken = localStorage.getItem('authToken');
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+            if (!apiUrl) throw new Error("API URL が設定されていません。");
+            if (!authToken) throw new Error("認証されていません。");
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !conversationId) return;
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const authToken = localStorage.getItem('authToken');
+            const res = await fetch(`${apiUrl}/conversations/${conversationId}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: newMessage }),
+            });
 
-      if (!apiUrl) throw new Error("API URL が設定されていません。");
-      if (!authToken) throw new Error("認証されていません。");
+            if (!res.ok) {
+                const errorData = await res.json();
+                console.error("Error sending message:", errorData);
+                throw new Error(`メッセージの送信に失敗しました (${res.status})`);
+            }
 
-      const res = await fetch(`${apiUrl}/conversations/${conversationId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: newMessage }),
-      });
+            const sentMessage: Message = await res.json();
+            setMessages((prevMessages) => [...prevMessages, sentMessage]);
+            setNewMessage('');
+            scrollToBottom();
+            if (textareaRef.current) {
+                textareaRef.current.style.height = 'auto'; // Reset textarea height
+            }
+        } catch (e: any) {
+            console.error("Error sending message:", e);
+            setError("メッセージの送信に失敗しました。");
+        }
+    };
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        console.error("Error sending message:", errorData);
-        throw new Error(`メッセージの送信に失敗しました (${res.status})`);
-      }
+    // テキストエリアのサイズを自動調整する関数
+    const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const textarea = e.target;
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
+        setNewMessage(textarea.value);
+    };
 
-      const sentMessage: Message = await res.json();
-      setMessages((prevMessages) => [...prevMessages, sentMessage]);
-      setNewMessage('');
-      scrollToBottom();
-    } catch (e: any) {
-      console.error("Error sending message:", e);
-      setError("メッセージの送信に失敗しました。");
-    }
-  };
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
 
-  if (loading) {
-    return <div className="p-6 text-gray-600 text-center">メッセージを読み込み中...</div>;
-  }
-
-  if (error) {
-    return <div className="p-6 text-red-500 text-center">エラー: {error}</div>;
-  }
-
-  return (
-    <div className="flex justify-center bg-gray-100 min-h-screen"> {/* 水平方向中央寄せ */}
-      <div className="max-w-2xl w-full flex flex-col h-screen"> {/* 最大幅と縦方向 Flexbox */}
-        <div className="bg-white border-b p-4">
-          <h2 className="text-xl font-bold text-center">会話 ID: {conversationId}</h2> {/* タイトル中央寄せ */}
-          {/* 必要に応じて参加者情報などを表示 */}
-        </div>
-        <div className="flex-grow overflow-y-auto p-4 space-y-2">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`rounded-md shadow-sm p-3 w-fit max-w-[80%] ${
-                msg.user?.id === (localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : 0)
-                  ? 'bg-blue-100 text-blue-800 ml-auto'
-                  : 'bg-gray-300 text-gray-800 mr-auto'
-              }`}
-            >
-              <div className="flex items-start space-x-2">
-                <div className="w-6 h-6 rounded-full overflow-hidden relative">
-                  {msg.user?.profile?.user_icon_url ? (
-                    <img src={msg.user.profile.user_icon_url} alt={msg.user.username} className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="w-full h-full bg-gray-400 flex items-center justify-center text-white text-xs">
-                      {msg.user?.username.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold">{msg.user?.username}</div>
-                  <p className="text-gray-700 break-words">{msg.content}</p>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {formatDistanceToNowStrict(new Date(msg.created_at), { locale: ja, addSuffix: true })}
-                  </div>
-                </div>
-              </div>
+    if (loading) {
+        return (
+            <div className="p-6 text-gray-600 text-center flex items-center justify-center h-screen">
+                <Loader2 className="animate-spin h-6 w-6 mr-2 text-gray-500" />
+                メッセージを読み込み中...
             </div>
-          ))}
-          <div ref={messagesEndRef} />
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-6 text-red-500 text-center flex items-center justify-center h-screen">
+                <AlertTriangle className="h-6 w-6 mr-2" />
+                エラー: {error}
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex justify-center bg-gray-100 min-h-screen">
+            <div className="max-w-2xl w-full flex flex-col h-screen">
+                <div className="bg-white border-b p-4">
+                    <h2 className="text-xl font-bold text-center">会話 ID: {conversationId}</h2>
+                    {/* 必要に応じて参加者情報などを表示 */}
+                </div>
+                <div className="flex-grow overflow-y-auto p-4 space-y-3">
+                    {messages.map((msg) => (
+                        <div
+                            key={msg.id}
+                            className={cn(
+                                "rounded-lg shadow-md p-3 w-fit max-w-[80%]",
+                                msg.user?.id === (localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : 0)
+                                    ? 'bg-blue-100 text-blue-800 ml-auto'
+                                    : 'bg-gray-200 text-gray-800 mr-auto'
+                            )}
+                        >
+                            <div className="flex items-start space-x-2">
+                                <div className="w-8 h-8 rounded-full overflow-hidden relative flex-shrink-0">
+                                    {msg.user?.profile?.user_icon_url ? (
+                                        <img
+                                            src={msg.user.profile.user_icon_url}
+                                            alt={msg.user.username}
+                                            className="object-cover w-full h-full"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gray-400 flex items-center justify-center text-white text-xs">
+                                            {msg.user?.username.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                </div>
+                                <div>
+                                    <div className="text-sm font-semibold">{msg.user?.username}</div>
+                                    <p className="text-gray-700 whitespace-pre-wrap break-words">{msg.content}</p>
+                                    <div className="text-xs text-gray-500 mt-1">
+                                        {formatDistanceToNowStrict(new Date(msg.created_at), {
+                                            locale: ja,
+                                            addSuffix: true,
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                </div>
+                <div className="bg-white border-t p-4">
+                    <div className="flex space-x-2">
+                        <textarea
+                            ref={textareaRef}
+                            className="flex-grow border rounded-md p-2 focus:ring focus:ring-blue-300 focus:outline-none resize-none"
+                            placeholder="メッセージを入力..."
+                            value={newMessage}
+                            onChange={handleTextareaChange}
+                            onKeyDown={handleKeyDown}
+                            rows={1} // 初期行数を1に設定
+                        />
+                        <button
+                            className="bg-blue-500 text-white rounded-md p-2 hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300 flex items-center"
+                            onClick={handleSendMessage}
+                        >
+                            <Send className="h-5 w-5" />
+                            <span className="sr-only">送信</span> {/* スクリーンリーダー向け */}
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div className="bg-white border-t p-4">
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              className="flex-grow border rounded-md p-2 focus:ring focus:ring-blue-300 focus:outline-none"
-              placeholder="メッセージを入力..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
-            <button
-              className="bg-blue-500 text-white rounded-md p-2 hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
-              onClick={handleSendMessage}
-            >
-              送信
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+    );
+};
+
+export default MessageDetailPage;

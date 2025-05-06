@@ -1,136 +1,213 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
 import {
-  ChatBubbleLeftIcon,
-  HeartIcon as HeartOutlineIcon,
-  ShareIcon,
-  EllipsisHorizontalIcon,
-  UserCircleIcon,
-  HeartIcon as HeartSolidIcon,
-} from '@heroicons/react/24/outline';
+    MessageCircle,
+    Heart,
+    Share,
+    MoreHorizontal,
+    User,
+    Loader2,
+    AlertTriangle
+} from 'lucide-react';
+import { Button } from '@/components/ui/button'; // shadcn/uiのButton
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'; // shadcn/uiのCard
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"  //shadcn/ui
+import { cn } from '@/lib/utils'; // utility関数
+import { Post } from '@/app/utils/types';
 import LikeButton from './LikeButton';
-
-
-interface Post {
-  id: number;
-  content: string;
-  created_at: string;
-  user?: {
-    username?: string;
-    user_icon_url?: string;
-  };
-  likes_count?: number; // いいね数
-  is_liked_by_current_user?: boolean; // 現在のユーザーがいいね済みかどうか
-}
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Skeleton } from "@/components/ui/skeleton"
 
 const PostList: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  const fetchPosts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`, {
-        cache: 'no-store',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`, // 認証が必要な場合はトークンを送信
-        },
-      });
-      if (!res.ok) {
-        const errorMessage = `Failed to fetch posts: ${res.status}`;
-        console.error(errorMessage);
-        setError(errorMessage);
-        return;
-      }
-      const data = await res.json();
-      setPosts(data);
-    } catch (err: any) {
-      console.error('Error fetching posts:', err);
-      setError('投稿の読み込みに失敗しました');
-    } finally {
-      setLoading(false);
+    const fetchPosts = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`, {
+                cache: 'no-store',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
+                },
+            });
+            if (!res.ok) {
+                const errorMessage = `Failed to fetch posts: ${res.status}`;
+                console.error(errorMessage);
+                setError(errorMessage);
+                return;
+            }
+            const data: Post[] = await res.json();
+            setPosts(data);
+        } catch (err: any) {
+            console.error('Error fetching posts:', err);
+            setError('投稿の読み込みに失敗しました');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchPosts();
+    }, [fetchPosts]);
+
+    const handleLikeChange = (postId: number, liked: boolean) => {
+        setPosts((prevPosts) =>
+            prevPosts.map((post) =>
+                post.id === postId
+                    ? {
+                        ...post,
+                        likes_count: liked ? (post.likes_count || 0) + 1 : (post.likes_count || 1) - 1,
+                        is_liked_by_current_user: liked,
+                    }
+                    : post
+            )
+        );
+    };
+
+    if (loading) {
+        // スケルトン表示
+        return (
+            <div className="space-y-6">
+                {[...Array(3)].map((_, i) => ( // 3つのスケルトンカードを表示
+                    <Card key={i} className="bg-white shadow-md border border-gray-100">
+                        <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                            <Skeleton className="h-9 w-9 rounded-full" />
+                            <div className="ml-3 space-y-1">
+                                <Skeleton className="h-4 w-20" />
+                                <Skeleton className="h-3 w-12" />
+                            </div>
+                            <div className="ml-auto">
+                                <Skeleton className="h-3 w-16" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <Skeleton className="h-6 w-full mb-2" />
+                            <Skeleton className="h-6 w-3/4" />
+                            <div className="mt-2">
+                                <Skeleton className="h-32 w-full rounded-md" />
+                            </div>
+                        </CardContent>
+                        <CardFooter className="flex justify-between text-gray-500 text-sm">
+                            <div className="flex items-center space-x-4">
+                                <Skeleton className="h-5 w-5" />
+                                <Skeleton className="h-4 w-12" />
+                                <Skeleton className="h-5 w-5" />
+                                <Skeleton className="h-4 w-12" />
+                                <Skeleton className="h-5 w-5" />
+                                <Skeleton className="h-4 w-12" />
+                            </div>
+                            <Skeleton className="h-5 w-5" />
+                        </CardFooter>
+                    </Card>
+                ))}
+            </div>
+        );
     }
-  }, []);
 
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+    if (error) {
+        return (
+            <div className="flex items-center justify-center py-8 text-red-500">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                {error}
+            </div>
+        );
+    }
 
-  const handleLikeChange = (postId: number, liked: boolean) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? { ...post, likes_count: liked ? (post.likes_count || 0) + 1 : (post.likes_count || 1) - 1, is_liked_by_current_user: liked }
-          : post
-      )
+    // Animation variants
+    const cardVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+        exit: { opacity: 0, y: -20, transition: { duration: 0.2 } }
+    };
+
+    return (
+        <div className="space-y-6">
+            <AnimatePresence>
+                {posts.map((post) => (
+                    <motion.div
+                        key={post.id}
+                        variants={cardVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                    >
+                        <Card
+                            className="bg-white shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-100"
+                        >
+                            <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+                                <Avatar className="h-9 w-9">
+                                    {post.user_icon_url ? (
+                                        <AvatarImage src={post.user_icon_url} alt={`${post.user?.display_name || post.user?.username || '不明'}のアイコン`} />
+                                    ) : (
+                                        <AvatarFallback>
+                                            <User className="h-6 w-6 text-gray-400" />
+                                        </AvatarFallback>
+                                    )}
+                                </Avatar>
+                                <div className="ml-3">
+                                    <Link href={`/users/${post.user_id}/profile`} className="hover:underline">
+                                        <span className="text-sm font-semibold text-gray-800">
+                                            {post.user?.display_name || post.user?.username || '不明'}
+                                        </span>
+                                    </Link>
+                                </div>
+                                <div className="ml-auto">
+                                    <p className="text-xs text-gray-500">
+                                        {new Date(post.created_at).toLocaleDateString()}
+                                    </p>
+                                </div>
+
+                            </CardHeader>
+                            <CardContent>
+                                <Link href={`/posts/${post.id}`} className="hover:underline">
+                                    <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                                        {post.content?.length > 70 ? post.content.substring(0, 70) + '...' : post.content}
+                                    </h2>
+                                </Link>
+                                {post.media_url && (
+                                    <div className="mt-2">
+                                        {/* */}
+                                        <img src={post.media_url} alt="投稿メディア" className="rounded-md max-h-64 object-cover w-full" />
+                                    </div>
+                                )}
+                            </CardContent>
+                            <CardFooter className="flex justify-between text-gray-500 text-sm">
+                                <div className="flex items-center space-x-4">
+                                    <Button variant="ghost" size="sm" className="flex items-center space-x-1 hover:text-blue-500 focus:outline-none">
+                                        <MessageCircle className="h-5 w-5" />
+                                        <span>{post.comments_count || 0}</span>
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="flex items-center space-x-1 hover:text-green-500 focus:outline-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032-.441-.046-.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
+                                        </svg>
+                                        <span>4</span>
+                                    </Button>
+                                    <div className="flex items-center space-x-1">
+                                        <LikeButton postId={post.id} isLiked={post.is_liked_by_current_user || false} onLikeChange={handleLikeChange} />
+                                        <span className="text-gray-600">{post.likes_count || 0}</span>
+                                    </div>
+
+                                    <Button variant="ghost" size="sm" className="flex items-center space-x-1 hover:text-gray-700 focus:outline-none">
+                                        <Share className="h-5 w-5" />
+                                        <span>Share</span>
+                                    </Button>
+                                </div>
+                                <Button variant="ghost" size="icon" className="hover:text-gray-700 focus:outline-none">
+                                    <MoreHorizontal className="h-5 w-5" />
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                    </motion.div>
+                ))}
+            </AnimatePresence>
+        </div>
     );
-  };
-
-  if (loading) {
-    return <div className="text-center py-4">読み込み中...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-4 text-red-500">{error}</div>;
-  }
-
-  return (
-    <ul className="mt-6 space-y-4">
-      {posts.map((post) => (
-        <li key={post.id} className="bg-white shadow-md rounded-md p-4 hover:shadow-lg transition duration-300">
-          <div className="flex items-start space-x-3">
-            <div className="flex items-center flex-shrink-0 ">
-              <UserCircleIcon className="h-8 w-8 rounded-full text-gray-400 mr-2" />
-              <span className="text-sm font-semibold text-gray-800">
-                {post.user?.username || '不明'}
-              </span>
-            </div>
-            <br />
-
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-700 mb-1">
-                <Link href={`/posts/${post.id}`} className="hover:text-blue-500 transition duration-200">
-                  {post.content?.length > 70 ? post.content.substring(0, 70) + '...' : post.content}
-                </Link>
-                </h2>
-                <p className="text-sm text-gray-500">
-                  {new Date(post.created_at).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="flex justify-between text-gray-500 text-sm mt-2">
-                <button className="flex items-center space-x-1 hover:text-blue-500 focus:outline-none">
-                  <ChatBubbleLeftIcon className="h-5 w-5" />
-                  <span className="text-gray-600 text-sm">{post.likes_count || 0}</span>
-                </button>
-                <button className="flex items-center space-x-1 hover:text-green-500 focus:outline-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046-.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3" />
-                  </svg>
-                  4
-                </button>
-                <div className="flex items-center space-x-1">
-                  <LikeButton postId={post.id} isLiked={post.is_liked_by_current_user || false} onLikeChange={handleLikeChange} />
-                  <span className="text-gray-600 text-sm">{post.likes_count || 0}</span>
-                </div>
-                <button className="flex items-center space-x-1 hover:text-gray-700 focus:outline-none">
-                  <ShareIcon className="h-5 w-5" />
-                  <span className="text-gray-600 text-sm">{post.likes_count || 0}</span>
-                </button>
-                <button className="hover:text-gray-700 focus:outline-none">
-                  <EllipsisHorizontalIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
 };
 
 export default PostList;

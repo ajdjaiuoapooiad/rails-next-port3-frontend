@@ -29,20 +29,55 @@ export interface UserProfile {
     user_icon_url?: string;
     bg_image_url?: string;
     is_following?: boolean;
+    display_name?: string | null; // 表示名を追加 (null許容)
 }
 export interface Post {
     id: number;
-    user_id: number; // 追加
+    user_id: number;
     content: string;
+    post_type: string | null;
+    media_url: string | null;
     created_at: string;
-    updated_at?: string;
+    updated_at: string;
     user?: {
       id: number;
-      username?: string;
-      user_icon_url?: string;
+      email: string;
+      password_digest: string;
+      username: string;
+      display_name: string | null;
+      avatar: string | null;
+      created_at: string;
+      updated_at: string;
+      profile?: {
+        id: number;
+        user_id: number;
+        bio: string | null;
+        location: string | null;
+        website: string | null;
+        display_name: string | null;
+        created_at: string;
+        updated_at: string;
+      };
     };
     likes_count?: number;
     is_liked_by_current_user?: boolean;
-    image_url?: string | null;
-    video_url?: string | null;
+    user_icon_url?: string;
+    comments_count?: number; // 追加: コメント数を追加
   }
+  
+
+export interface Comment {
+    id: number;
+    content: string;
+    created_at: string;
+    user_id: number; // 追加: ユーザー ID
+    post_id: number; // 追加: 投稿 ID
+    user?: {
+        id?: number; // コメント投稿者の ID
+        username?: string;
+        user_icon_url?: string;
+        display_name?: string | null; // 表示名を追加
+    };
+    user_icon_url?: string; //  APIからの user_icon_url を直接使用するため追加
+    display_name?: string;
+}

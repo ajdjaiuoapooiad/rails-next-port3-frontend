@@ -3,32 +3,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from './Sidebar';
-import { UserCircleIcon } from '@heroicons/react/24/solid';
-import { ChevronDownIcon, BellIcon } from '@heroicons/react/20/solid';
+import { UserCircleIcon,  } from '@heroicons/react/24/solid';
+import { ChevronDownIcon, BellIcon } from '@heroicons/react/20/solid'; // MessageCircle をインポート
 import NotificationList from './notifications/NotificationList';
-import { userAgent } from 'next/server';
 import { UserProfile, Notification } from '../utils/types';
-
-
-
-interface UserProfileShort {
-  id: number;
-  username: string;
-}
+import { Skeleton } from "@/components/ui/skeleton"
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {}
+
 
 const Navbar: React.FC<NavbarProps> = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
 
   // 通知関連のステート
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [senders, setSenders] = useState<{ [userId: number]: UserProfileShort }>({});
+  const [senders, setSenders] = useState<{ [userId: number]: UserProfile }>({});
   const [isNotificationsDropdownOpen, setIsNotificationsDropdownOpen] = useState(false);
   const notificationsDropdownRef = useRef<HTMLDivElement>(null);
+
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -76,11 +73,17 @@ const Navbar: React.FC<NavbarProps> = () => {
       } catch (error) {
         console.error('Error fetching current user profile:', error);
         setCurrentUserProfile(null);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchCurrentUserProfile();
-  }, []);
+    if (userId) {
+      fetchCurrentUserProfile();
+    } else {
+      setLoading(false); // userId がない場合も loading を false に設定
+    }
+  }, [userId]);
 
   useEffect(() => {
     const handleClickOutsideDropdown = (event: MouseEvent) => {
@@ -128,7 +131,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                     },
                   });
                   if (profileResponse.ok) {
-                    const profileData: UserProfileShort = await profileResponse.json();
+                    const profileData: UserProfile = await profileResponse.json();
                     setSenders((prevSenders) => ({ ...prevSenders, [profileData.id]: profileData }));
                   }
                 } catch (error) {
@@ -148,10 +151,10 @@ const Navbar: React.FC<NavbarProps> = () => {
     fetchNotifications();
   }, []);
 
-  const displayedUsername: string = currentUserProfile?.username ? (currentUserProfile.username.length > 10 ? currentUserProfile.username.slice(0, 10) + '...' : currentUserProfile.username) : '';
+  const displayedUsername: string = currentUserProfile?.display_name || currentUserProfile?.username ? (currentUserProfile.display_name || currentUserProfile.username).length > 10 ? (currentUserProfile.display_name || currentUserProfile.username).slice(0, 10) + '...' : (currentUserProfile.display_name || currentUserProfile.username) : '';
 
   return (
-    <nav className="bg-gray-800 p-4">
+    <nav className="bg-gray-800 p-4 border-b border-gray-700">
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center">
           <button onClick={toggleSidebar} className="text-white text-lg focus:outline-none mr-4 sm:mr-8">
@@ -163,13 +166,17 @@ const Navbar: React.FC<NavbarProps> = () => {
               />
             </svg>
           </button>
-          <Link href="/posts" className="text-white text-lg font-bold">
+          <Link href="/posts" className="text-white text-lg font-bold hover:text-gray-200 transition-colors">
             My Website
           </Link>
         </div>
         <div className="relative flex items-center space-x-4">
-
-          {currentUserProfile ? (
+          {loading ? (
+            <>
+              <Skeleton className="h-8 w-8 rounded-full bg-gray-700" />
+              <Skeleton className="h-8 w-48 bg-gray-700" />
+            </>
+          ) : currentUserProfile ? (
             <>
               <div
                 ref={notificationsDropdownRef}
@@ -179,44 +186,64 @@ const Navbar: React.FC<NavbarProps> = () => {
               >
                 <button className="text-gray-300 hover:text-white focus:outline-none">
                   <span className="sr-only">Notifications</span>
-                  <BellIcon className="h-6 w-6 mr-8" />
-                  {notifications.filter(n => !n.read_at).length > 0 && (
-                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
-                      {notifications.filter(n => !n.read_at).length > 5 ? '5+' : notifications.filter(n => !n.read_at).length}
-                    </span>
-                  )}
+                  <BellIcon className="h-6 w-6" />
+                  <AnimatePresence>
+                    {notifications.filter(n => !n.read_at).length > 0 && (
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full"
+                      >
+                        {notifications.filter(n => !n.read_at).length > 5 ? '5+' : notifications.filter(n => !n.read_at).length}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </button>
-                {isNotificationsDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                    <div className="p-2">
-                      {notifications.length > 0 ? (
-                        <NotificationList
-                          notifications={notifications.slice(0, 5)}
-                          senders={senders}
-                        />
-                      ) : (
-                        <div className="text-gray-600 p-2">まだ通知はありません。</div>
-                      )}
-                      {notifications.length > 5 && (
-                        <Link href="/notifications" className="block text-center text-blue-500 hover:underline p-2">
-                          すべて表示
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                )}
+                <AnimatePresence>
+                  {isNotificationsDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-10"
+                    >
+                      <div className="p-2">
+                        {notifications.length > 0 ? (
+                          <NotificationList
+                            notifications={notifications.slice(0, 5)}
+                            senders={senders}
+                          />
+                        ) : (
+                          <div className="text-gray-600 p-2">まだ通知はありません。</div>
+                        )}
+                        {notifications.length > 5 && (
+                          <Link href="/notifications" className="block text-center text-blue-500 hover:underline p-2">
+                            すべて表示
+                          </Link>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              
-              <Link href="/auth/login" className="text-gray-300 hover:text-white">
-                メッセージ
+
+              <Link href="/messages" className="text-gray-300 hover:text-white  transition-colors hidden sm:block">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
+                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+              </svg>
+
               </Link>
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button onClick={toggleDropdown} className="flex items-center focus:outline-none">
                   <div className="flex items-center">
                     {currentUserProfile.user_icon_url ? (
                       <img
                         src={currentUserProfile.user_icon_url}
-                        alt={`${currentUserProfile.username}のアイコン`}
+                        alt={`${currentUserProfile.display_name || currentUserProfile.username || '不明'}のアイコン`}
                         className="h-8 w-8 rounded-full object-cover"
                         onError={(e) => {
                           console.error('Failed to load user icon:', currentUserProfile.user_icon_url);
@@ -228,30 +255,40 @@ const Navbar: React.FC<NavbarProps> = () => {
                       <UserCircleIcon className="h-8 w-8 text-gray-300" />
                     )}
                     <span className="text-white ml-2 text-sm hidden sm:inline">{displayedUsername}</span>
-                    <ChevronDownIcon className={`h-5 w-5 text-gray-300 ml-1 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDownIcon
+                      className={`h-5 w-5 text-gray-300 ml-1 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                    />
                   </div>
                 </button>
-                {isDropdownOpen && (
-                  <div ref={dropdownRef} className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                    <Link href={`/users/${userId}/profile`} className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
-                      プロフィール
-                    </Link>
-                    <Link href={`/users/${userId}`} className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
-                      設定
-                    </Link>
-                    <Link href="/logout" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
-                      ログアウト
-                    </Link>
-                  </div>
-                )}
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10"
+                    >
+                      <Link href={`/users/${userId}/profile`} className="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
+                        プロフィール
+                      </Link>
+                      <Link href={`/users/${userId}`} className="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
+                        設定
+                      </Link>
+                      <Link href="/logout" className="block px-4 py-2 text-gray-800 hover:bg-gray-100 transition-colors">
+                        ログアウト
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </>
           ) : (
             <div className="space-x-4">
-              <Link href="/auth/login" className="text-gray-300 hover:text-white">
+              <Link href="/auth/login" className="text-gray-300 hover:text-white hover:underline transition-colors">
                 ログイン
               </Link>
-              <Link href="/auth/register" className="text-gray-300 hover:text-white">
+              <Link href="/auth/register" className="text-gray-300 hover:text-white hover:underline transition-colors">
                 新規登録
               </Link>
             </div>
@@ -264,3 +301,4 @@ const Navbar: React.FC<NavbarProps> = () => {
 };
 
 export default Navbar;
+
