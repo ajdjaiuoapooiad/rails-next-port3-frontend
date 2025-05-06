@@ -37,6 +37,7 @@ const NotificationsPage: React.FC = () => {
 
                 const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
                     headers: {
+                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`,
                     },
                 });
