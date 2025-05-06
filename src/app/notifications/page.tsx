@@ -18,11 +18,17 @@ interface NotificationWithSender {
     sender_user_icon_url: string | null;
 }
 
+interface ApiResponse {
+    notifications: NotificationWithSender[];
+    unread_count: number;
+}
+
 const NotificationsPage: React.FC = () => {
     const [notifications, setNotifications] = useState<NotificationWithSender[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const userId = localStorage.getItem('userId') ? parseInt(localStorage.getItem('userId')!) : null;
+    const [unreadCount, setUnreadCount] = useState<number>(0);
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -47,10 +53,11 @@ const NotificationsPage: React.FC = () => {
                     return;
                 }
 
-                const data: NotificationWithSender[] = await response.json();
-                const myNotifications = data.filter((notification) => notification.recipient_id === userId);
+                const data: ApiResponse = await response.json();
+                const myNotifications = data.notifications.filter((notification) => notification.recipient_id === userId);
                 const sortedNotifications = myNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                 setNotifications(sortedNotifications);
+                setUnreadCount(data.unread_count);
                 setLoading(false);
             } catch (err: any) {
                 setError(`通知の取得中にエラーが発生しました: ${err.message}`);
@@ -71,8 +78,8 @@ const NotificationsPage: React.FC = () => {
                 notification.id === notificationId ? { ...notification, read_at: new Date().toISOString() } : notification
             )
         );
+        setUnreadCount(prevCount => prevCount > 0 ? prevCount - 1 : 0);
         // ここでバックエンドの API を呼び出して read_at を更新することも可能です
-        // 例：
         const token = localStorage.getItem('authToken');
         if (token) {
             fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${notificationId}/mark_as_read`, {
@@ -143,7 +150,7 @@ const NotificationsPage: React.FC = () => {
         <div className="bg-gray-100 py-6 sm:py-8 lg:py-12">
             <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
                 <h1 className="text-xl font-bold text-gray-800 sm:text-2xl lg:text-3xl text-center mb-6">
-                    通知
+                    通知 ({unreadCount} 件の未読)
                 </h1>
                 <ul className="space-y-3">
                     {notifications.map((notification) => (
