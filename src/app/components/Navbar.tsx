@@ -167,7 +167,7 @@ const Navbar: React.FC<NavbarProps> = () => {
                         // APIのレスポンスがオブジェクトであることを確認し、notificationsプロパティを使用する
                         if (data && Array.isArray(data.notifications)) {
                             // ログインユーザー宛の通知のみをフィルタリング
-                            const filteredNotifications = data.notifications.filter((n: Notification) => n.recipient_id === parseInt(userId, 10));
+                            const filteredNotifications = data.notifications.filter((n: Notification) => n.recipient_id === parseInt(userId, 10) && n.read_at === null);
                             const sortedNotifications = filteredNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
                             setNotifications(sortedNotifications);
                         } else {
