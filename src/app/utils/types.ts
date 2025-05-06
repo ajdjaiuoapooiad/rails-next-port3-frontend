@@ -93,3 +93,17 @@ export interface Conversation {
   last_message: string | null;
   last_message_at: string | null;
 }
+
+export interface Message {
+  id: number;
+  content: string;
+  user: {
+      id: number;
+      username: string;
+      profile?: {
+          user_icon_url?: string;
+          display_name?: string | null; // 表示名を追加
+      };
+  };
+  created_at: string;
+}
