@@ -51,19 +51,14 @@ const PostIndexPage = () => {
         <h1 className="text-3xl font-bold text-gray-900 text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
           みんなの投稿
         </h1>
-        <Card className="mb-8 shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-800">新規投稿</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CreatePostForm
-              onPostCreated={handlePostCreated}
-              userId={userId}
-              postType={postType}
-              token={authToken}
-            />
-          </CardContent>
-        </Card>
+        <div className="mb-8">
+          <CreatePostForm
+            onPostCreated={handlePostCreated}
+            userId={userId}
+            postType={postType}
+            token={authToken}
+          />
+        </div>
         <PostList />
       </div>
     </div>

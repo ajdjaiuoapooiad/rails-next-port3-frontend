@@ -137,31 +137,31 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
   };
 
   return (
-    <Card className="bg-white shadow-md rounded-lg">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-4">
-          <Avatar className="h-10 w-10">
+    <Card className="bg-white shadow-md rounded-lg h-48">
+      <CardHeader className="">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <Avatar className="h-6 w-6">
             {user?.user_icon_url ? (
               <AvatarImage src={user.user_icon_url} alt={`${user?.display_name || user?.username || '投稿者'}のアイコン`} className="rounded-full" />
             ) : (
               <AvatarFallback className="text-gray-400">
-                <User className="h-6 w-6" />
+                <User className="h-3 w-3" />
               </AvatarFallback>
             )}
           </Avatar>
-          <div>
-            <div className="font-semibold text-gray-900">{user?.display_name || user?.username || '投稿者'}</div>
-            <div className="text-sm text-gray-500">新しい投稿を作成</div>
+          <div className="text-base text-gray-900 truncate">
+            {user?.display_name || user?.username || '投稿者'}
           </div>
         </CardTitle>
+        <div className="text-xs text-gray-500 pt-1">新しい投稿を作成</div>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <CardContent className="">
+        <form onSubmit={handleSubmit} className="space-y-2">
           <div>
             <Textarea
               id="postContent"
-              rows={3}
-              className="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-500"
+              rows={2}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder:text-gray-500 text-sm"
               placeholder="今何してる？"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -175,11 +175,12 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
 
           {/* 画像プレビュー */}
           {imagePreview && (
-            <div className="relative">
+            <div className="relative max-h-48 overflow-hidden rounded-md">
               <img
                 src={imagePreview}
                 alt="投稿プレビュー"
-                className="max-h-64 rounded-md w-full object-contain"
+                className="w-full object-contain"
+                style={{ maxHeight: '12rem' }}
               />
               <Button
                 type="button"
@@ -195,7 +196,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
           )}
 
           {/* 画像選択ボタン */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <input
               type="file"
               id="imageInput"
@@ -206,34 +207,36 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
             <label htmlFor="imageInput">
               <Button
                 variant="outline"
-                className="text-gray-700 hover:bg-gray-100 hover:text-blue-500 transition-colors"
+                size="sm"
+                className="text-gray-700 hover:bg-gray-100 hover:text-blue-500 transition-colors text-xs px-2 py-1"
                 disabled={isSubmitting}
               >
-                <ImagePlus className="h-5 w-5 mr-2" />
-                画像を追加
+                <ImagePlus className="h-4 w-4 mr-1" />
+                画像
               </Button>
             </label>
             {selectedImage && (
-              <span className="text-sm text-gray-500 truncate max-w-[150px]">{selectedImage.name}</span>
+              <span className="text-xs text-gray-500 truncate max-w-[120px] sm:max-w-[150px]">{selectedImage.name}</span>
             )}
           </div>
 
-          <CardFooter className="justify-end">
+          <CardFooter className="justify-end pt-2">
             <Button
               type="submit"
+              size="sm"
               className={cn(
-                "bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-full transition-colors duration-200",
+                "bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-full transition-colors duration-200 text-sm",
                 isSubmitting && "opacity-70 cursor-not-allowed"
               )}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="animate-spin h-5 w-5 mr-3" />
-                  投稿中...
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                  投稿
                 </>
               ) : (
-                '投稿する'
+                '投稿'
               )}
             </Button>
           </CardFooter>
@@ -244,4 +247,3 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated, userId, 
 };
 
 export default CreatePostForm;
-
