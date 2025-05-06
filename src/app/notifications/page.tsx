@@ -73,20 +73,20 @@ const NotificationsPage: React.FC = () => {
         );
         // ここでバックエンドの API を呼び出して read_at を更新することも可能です
         // 例：
-        // const token = localStorage.getItem('authToken');
-        // if (token) {
-        //     fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${notificationId}/mark_as_read`, {
-        //         method: 'PUT',
-        //         headers: {
-        //             'Authorization': `Bearer ${token}`,
-        //             'Content-Type': 'application/json',
-        //         },
-        //     }).then(response => {
-        //         if (!response.ok) {
-        //             console.error('既読状態の更新に失敗しました');
-        //         }
-        //     });
-        // }
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${notificationId}/mark_as_read`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            }).then(response => {
+                if (!response.ok) {
+                    console.error('既読状態の更新に失敗しました');
+                }
+            });
+        }
     };
 
     if (loading) {
