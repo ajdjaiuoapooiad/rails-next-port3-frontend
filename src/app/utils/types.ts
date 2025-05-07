@@ -7,7 +7,6 @@ export interface User {
     email: string; // 追加
 }
 
-
 export interface Notification {
   id: number;
   recipient_id: number;
@@ -18,10 +17,9 @@ export interface Notification {
   read_at: string | null;
   created_at: string;
   updated_at: string;
-  sender_display_name: string | null;
-  sender_user_icon_url: string | null;
+  sender_display_name?: string; // 追加
+  sender_user_icon_url?: string; // 追加
 }
-
 
 export interface UserProfile {
     id: number;

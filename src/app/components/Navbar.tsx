@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Swal from 'sweetalert2';
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils"
+import HambergerIcon from './posts/icons/HambergerIcon';
 
 interface NavbarProps {}
 
@@ -229,13 +230,7 @@ const Navbar: React.FC<NavbarProps> = () => {
             <div className="container mx-auto flex items-center justify-between">
                 <div className="flex items-center">
                     <button onClick={toggleSidebar} className="text-white text-lg focus:outline-none mr-4 sm:mr-8">
-                        <svg className="h-6 w-6 fill-current" viewBox="0 0 24 24">
-                            <path
-                                fillRule="evenodd"
-                                d="M4 5h16a1 1 0 010 2H4a1 1 0 010-2zm0 6h16a1 0 010 2H4a1 0 010-2zm0 6h16a1 1 0 010 2H4a1 0 010-2z"
-                                clipRule="evenodd"
-                            />
-                        </svg>
+                        <HambergerIcon />
                     </button>
                     <Link href="/posts" className="text-white text-lg font-bold hover:text-gray-200 transition-colors">
                         My Website
