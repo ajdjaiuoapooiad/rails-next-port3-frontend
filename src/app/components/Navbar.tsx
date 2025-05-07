@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Sidebar from './Sidebar';
 import { UserCircleIcon, BellIcon, ArrowRightOnRectangleIcon, ChevronDownIcon } from '@heroicons/react/24/solid';
 import NotificationList from './notifications/NotificationList';
-import { UserProfile, Notification } from '../utils/types';
+import { Notification, UserProfile } from '../utils/types';
 import { Skeleton } from "@/components/ui/skeleton"
 import { motion, AnimatePresence } from 'framer-motion';
 import Swal from 'sweetalert2';
@@ -14,19 +14,7 @@ import { cn } from "@/lib/utils"
 
 interface NavbarProps {}
 
-export interface Notification {
-  id: number;
-  recipient_id: number;
-  sender_id: number | null;
-  notifiable_type: string;
-  notifiable_id: number;
-  notification_type: string;
-  read_at: string | null;
-  created_at: string;
-  updated_at: string;
-  sender_display_name?: string; // 追加
-  sender_user_icon_url?: string; // 追加
-}
+
 
 const Navbar: React.FC<NavbarProps> = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);

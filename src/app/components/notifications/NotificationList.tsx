@@ -4,20 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Bell, CheckCircle, XCircle, AlertTriangle, Mail, MessageSquare, Heart, UserPlus } from 'lucide-react';
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface Notification {
-  id: number;
-  recipient_id: number;
-  sender_id: number | null;
-  notifiable_type: string;
-  notifiable_id: number;
-  notification_type: string;
-  read_at: string | null;
-  created_at: string;
-  updated_at: string;
-  sender_display_name: string | null;
-  sender_user_icon_url: string | null;
-}
+import { Notification } from '@/app/utils/types';
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
