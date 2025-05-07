@@ -136,11 +136,22 @@ const NotificationList: React.FC<{}> = () => {
         return;
       }
 
-      const data: { notifications: Notification[], unread_count: number } = await response.json();
-      const myNotifications = data.notifications.filter((notification) => notification.recipient_id === userId);
-      const sortedNotifications = myNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      setNotifications(sortedNotifications);
-      setUnreadCount(data.unread_count);
+      const data = await response.json();
+        if(data && data.notifications){
+          const myNotifications = data.notifications.filter((notification: Notification) => notification.recipient_id === userId);
+          // ここで未読通知のみにフィルタ
+          const unreadNotifications = myNotifications.filter((notification:Notification) => !notification.read_at);
+          const sortedNotifications = unreadNotifications.sort(
+            (a: Notification, b:Notification) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+          setNotifications(sortedNotifications);
+          setUnreadCount(data.unread_count); // 未読数をAPIから取得した値で設定
+        } else {
+          setError("Invalid response format: notifications array is missing");
+          setLoading(false);
+          return;
+        }
+
       setLoading(false);
     } catch (err: any) {
       setError(`通知の取得中にエラーが発生しました: ${err.message}`);
